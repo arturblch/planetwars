@@ -5,11 +5,13 @@ Created on 23/03/2011
 '''
 import sys
 import pygame
+import threading
 
 from pygame.locals import * #@UnusedWildImport
 
 #from Players import *
 from PlanetWars import PlanetWars
+MAX_GAME_TICKS = 500
 
 GAME_SIZE = (500,500)
 SCREEN_SIZE = (3*GAME_SIZE[0], GAME_SIZE[1])
@@ -22,67 +24,204 @@ PLANET_FACTOR = 0.05
 MARGIN = 20
 DISPLAY = True
 
-def draw(world, screen, background=None, offset=(0,0)):
-    display_size = [screen.get_size()[0] - (MARGIN * 2), screen.get_size()[1] - (MARGIN * 2)]
-    display_offset = [offset[0] + MARGIN, offset[1] + MARGIN]
-    e = world._Extent()
-    world_width = e[1] - e[3]
-    world_height = e[0] - e[2]
-    world_offset = [0, 0]
-    if(e[3] < 0):
-        world_offset[0] = abs(e[3])
-    if(e[2] < 0):
-        world_offset[1] = abs(e[2])
-    world_r = float(world_width) / float(world_height)
-    screen_r = float(display_size[0]) / float(display_size[1])
-    if world_r > screen_r:
-        display_size[1] = display_size[0] / world_r
-        dy = screen.get_size()[1] - (display_size[1] + (MARGIN * 2))
-        display_offset[1] += int(dy / 2.0)
-    else:
-        display_size[0] = display_size[1] * world_r
-        dx = screen.get_size()[0] - (display_size[0] + (MARGIN * 2))
-        display_offset[0] += int(dx / 2.0)
-    
-    factor = (float(display_size[0]) / float(world_width))
-    surf = pygame.Surface(display_size)
-    if(background):
-        surf.blit(background, (0,0))
-    has_fog = world.PlayerID() != 0
-    fog = pygame.Surface(display_size, flags=SRCALPHA)
-    fog.fill((128,128,128,0))
-    
-    for p in world.Planets():
-        screen_x = int((float(p.X() + world_offset[0]) / world_width) * display_size[0])
-        screen_y = int((float(p.Y() + world_offset[1]) / world_height) * display_size[1])
-        radius = int((PLANET_MIN_R * factor) + ((PLANET_FACTOR * factor) * p.GrowthRate()))
-        pygame.draw.circle(surf, COLOUR[p.Owner()], (screen_x, screen_y), radius)
-        if((p.Owner() == world.PlayerID()) and has_fog):
-            pygame.draw.circle(fog, (0,0,0,0), (screen_x, screen_y), int(p.VisionRange() * factor))
-        text = pygame.font.Font(None, 20).render(str(p.NumShips()), False, (0,0,0))
-        text_pos = (screen_x - (text.get_width() / 2), screen_y - (text.get_height() / 2))
-        surf.blit(text, text_pos)
-        pid = pygame.font.Font(None, 18).render(str(p.ID()), False, (255,255,255))
-        surf.blit(pid, (screen_x - radius, screen_y - radius))
+class Drawer():
+
+    MARGIN = 20
+    PLANET_MIN_R = 0.85
+    PLANET_FACTOR = 0.05
+    COLOUR = {
+        "0": (200, 200, 200),
+        "1": (255, 0, 0),
+        "2": (0, 0, 255),
+        "3": (0, 255, 0)
+    }
+
+    def __init__(
+            self,
+            world,
+            display,
+            background=None,
+            offset=(0, 0)):
+        self.world = world
+        self.display = display
+        self.background = background
+        self.offset = offset
+
+        self.display_size = []
+        self.display_offset = []
+        self.display_res = 0
+
+        self.world_size = []
+        self.world_offset = []
+        self.world_res = 0
+        self.factor = 0
+
+        self.has_fog = False
+        self.fog = None
+        self.surf = None
+
+        self._init_params()
+
+    def _init_params(self):
+        self.display_size = [
+            self.display.get_size()[0] - (MARGIN * 2),
+            self.display.get_size()[1] - (MARGIN * 2)
+        ]
+        self.display_offset = [
+            self.offset[0] + MARGIN, self.offset[1] + MARGIN
+        ]
+        self.display_res = float(self.display_size[0]) / float(
+            self.display_size[1])
+
+        self.world_size = self.world.GetSize()
+        self.world_offset = self.world.GetOffset()
+
+        if self.world_size[1] == 0:
+        	pass
+       	else:
+        	self.world_res = float(self.world_size[0]) / float(self.world_size[1])
+
+        if self.world_res > self.display_res:
+            self.display_offset[1] += int(self.display_size[1] *
+                                          (1 - 1 / self.world_res) / 2.0)
+            self.display_size[1] = self.display_size[0] / self.world_res
+        else:
+            self.display_offset[0] += int(self.display_size[0] *
+                                          (1 - self.world_res) / 2.0)
+            self.display_size[0] = self.display_size[0] * self.world_res
+
+        self.factor = (float(self.display_size[0]) / float(self.world_size[0]))
+        self.surf = pygame.Surface(self.display_size)
+        if (self.background):
+            self.surf.blit(self.background, (0, 0))
+        self.has_fog = self.world.PlayerID() != 0
+        if (self.has_fog):
+            self.fog = pygame.Surface(self.display_size, flags=SRCALPHA)
+            self.fog.fill((128, 128, 128, 0))
+
+    def draw_planets(self):
+        for p in self.world.Planets():
+            screen_x = int(float(p.X() + self.world_offset[0]) * self.factor)
+            screen_y = int(float(p.Y() + self.world_offset[1]) * self.factor)
+            radius = int((PLANET_MIN_R * self.factor) +
+                         ((PLANET_FACTOR * self.factor) * p.GrowthRate()))
+            pygame.draw.circle(self.surf, COLOUR[p.Owner()],
+                               (screen_x, screen_y), radius)
+            if ((p.Owner() ==self.world.PlayerID()) and self.has_fog):
+                pygame.draw.circle(self.fog, (0, 0, 0, 0), (screen_x,
+                                                            screen_y),
+                                   int(p.VisionRange() * self.factor))
+            text = pygame.font.Font(None, 20).render(
+                str(p.NumShips()), False, (0, 0, 0))
+            text_pos = (screen_x - (text.get_width() / 2),
+                        screen_y - (text.get_height() / 2))
+            self.surf.blit(text, text_pos)
+            pid = pygame.font.Font(None, 18).render(
+                str(p.ID()), False, (255, 255, 255))
+            self.surf.blit(pid, (screen_x - radius, screen_y - radius))
+
+    def draw_fleet(self):
+        for f in self.world.Fleets():
+            screen_x = int(float(f.X() + self.world_offset[0]) * self.factor)
+            screen_y = int(float(f.Y() + self.world_offset[1]) * self.factor)
+            text = pygame.font.Font(None, 16).render(
+                str(f.NumShips()), False, COLOUR[f.Owner()])
+            text_pos = (screen_x - (text.get_width() / 2),
+                        screen_y - (text.get_height() / 2))
+            self.surf.blit(text, text_pos)
+            if ((f.Owner() == self.world.PlayerID()) and self.has_fog):
+                pygame.draw.circle(self.fog, (0, 0, 0, 0), (screen_x,
+                                                            screen_y),
+                                   int(f.VisionRange() * self.factor))
+
+    def draw(self):
+    	self.fog = pygame.Surface(self.display_size, flags=SRCALPHA)
+    	self.fog.fill((128,128,128,0))
+    	if(self.background):
+        	self.surf.blit(self.background, (0,0))
+        self.draw_fleet()
+        self.draw_planets()
         
-    for f in world.Fleets():
-        text = pygame.font.Font(None, 16).render(str(f.NumShips()), False, COLOUR[f.Owner()])
-        screen_x = int((float(f.X() + world_offset[0]) / world_width) * display_size[0])
-        screen_y = int((float(f.Y() + world_offset[1]) / world_height) * display_size[1])
-        text_pos = (screen_x - (text.get_width() / 2), screen_y - (text.get_height() / 2))
-        surf.blit(text, text_pos)
-        if((f.Owner() == world.PlayerID()) and has_fog):
-            pygame.draw.circle(fog, (0,0,0,0), (screen_x, screen_y), int(f.VisionRange() * factor))
+        if (self.has_fog):
+            self.surf.blit(self.fog, (0, 0), special_flags=BLEND_SUB)
+        self.surf.blit(
+            pygame.font.Font(None, 22).render(
+                str(self.world.CurrentTick()), False, (255, 255, 255)), (20,
+                                                                         20))
+        self.display.blit(self.surf, self.display_offset)
+        pygame.display.update()
+
+
+	
+# def draw( world, 			# PlanetWarsProxy
+# 	      screen, 			# pygame.display
+# 	 	  background=None, 	# load picture
+# 	 	  offset=(0,0), 	# tuple 
+# 	 	):
+#     display_size = [screen.get_size()[0] - (MARGIN * 2), screen.get_size()[1] - (MARGIN * 2)]
+#     display_offset = [offset[0] + MARGIN, offset[1] + MARGIN]
     
-    if(has_fog):
-        surf.blit(fog, (0,0), special_flags=BLEND_SUB);
-    #output the current tick
-    surf.blit(pygame.font.Font(None, 22).render(str(world.CurrentTick()), False, (255,255,255)), (20, 20))
-    screen.blit(surf, display_offset)
-    pygame.display.update()
+#     world_size = world.GetSize()
+#     world_offset = world.GetOffset()
+#     world_r = world.GetRadius()
+
+
+#     screen_r = float(display_size[0]) / float(display_size[1])
+#     if world_r > screen_r:
+#         display_size[1] = display_size[0] / world_r
+#         dy = screen.get_size()[1] - (display_size[1] + (MARGIN * 2))
+#         display_offset[1] += int(dy / 2.0)
+#     else:
+#         display_size[0] = display_size[1] * world_r
+#         dx = screen.get_size()[0] - (display_size[0] + (MARGIN * 2))
+#         display_offset[0] += int(dx / 2.0)
+    
+#     factor = (float(display_size[0]) / float(world_size[0]))
+#     surf = pygame.Surface(display_size)
+#     if(background):
+#         surf.blit(background, (0,0))
+#     has_fog = world.PlayerID() != 0
+#     fog = pygame.Surface(display_size, flags=SRCALPHA)
+#     fog.fill((128,128,128,0))
+    
+#     for p in world.Planets():
+#         screen_x = int((float(p.X() + world_offset[0]) / world_size[0]) * display_size[0])
+#         screen_y = int((float(p.Y() + world_offset[1]) / world_size[1]) * display_size[1])
+#         radius = int((PLANET_MIN_R * factor) + ((PLANET_FACTOR * factor) * p.GrowthRate()))
+#         pygame.draw.circle(surf, COLOUR[p.Owner()], (screen_x, screen_y), radius)
+#         if((p.Owner() == world.PlayerID()) and has_fog):
+#             pygame.draw.circle(fog, (0,0,0,0), (screen_x, screen_y), int(p.VisionRange() * factor))
+#         text = pygame.font.Font(None, 20).render(str(p.NumShips()), False, (0,0,0))
+#         text_pos = (screen_x - (text.get_width() / 2), screen_y - (text.get_height() / 2))
+#         surf.blit(text, text_pos)
+#         pid = pygame.font.Font(None, 18).render(str(p.ID()), False, (255,255,255))
+#         surf.blit(pid, (screen_x - radius, screen_y - radius))
+        
+#     for f in world.Fleets():
+#         text = pygame.font.Font(None, 16).render(str(f.NumShips()), False, COLOUR[f.Owner()])
+#         screen_x = int((float(f.X() + world_offset[0]) / world_size[0]) * display_size[0])
+#         screen_y = int((float(f.Y() + world_offset[1]) / world_size[1]) * display_size[1])
+#         text_pos = (screen_x - (text.get_width() / 2), screen_y - (text.get_height() / 2))
+#         surf.blit(text, text_pos)
+#         if((f.Owner() == world.PlayerID()) and has_fog):
+#             pygame.draw.circle(fog, (0,0,0,0), (screen_x, screen_y), int(f.VisionRange() * factor))
+    
+#     if(has_fog):
+#         surf.blit(fog, (0,0), special_flags=BLEND_SUB);
+#     #output the current tick
+#     surf.blit(pygame.font.Font(None, 22).render(str(world.CurrentTick()), False, (255,255,255)), (20, 20))
+#     screen.blit(surf, display_offset)
+#     pygame.display.update()
     
 
-def do_game(game_id, logger, p1, p2, pw, show_gui=False, max_game_length=500):
+def do_game(game_id, # int
+			 logger, # Logger()
+			 	 p1, # BasePlayer()
+			 	 p2, # BasePlayer()
+			 	 pw, # PlanetWars()
+	 show_gui=False, # bool
+			):
+
     #we want to:
     #  - Load the map
     #  - instantiate two players (objects that respond to player.DoTurn(PlanetWars)
@@ -109,7 +248,7 @@ def do_game(game_id, logger, p1, p2, pw, show_gui=False, max_game_length=500):
             window_size = GAME_SIZE
         
         screen = pygame.display.set_mode(window_size, 0 ,32)
-        background = pygame.image.load("space.jpg").convert_alpha()
+        background = pygame.image.load("../space.jpg").convert_alpha()
         clock = pygame.time.Clock()
         paused = True
     else:
@@ -121,10 +260,15 @@ def do_game(game_id, logger, p1, p2, pw, show_gui=False, max_game_length=500):
     #min_100_ships = lambda p, pw: 100
     #p1 = VariableAggressionPlayer(0.2, min_100_ships)
     #p2 = VariableAggressionPlayer(0.2, min_100_ships)
-    
+    p1view = Drawer(p1Proxy, screen,background)
+    p2view = Drawer(p2Proxy, screen,background)
+    pwview = Drawer(pw, screen,background)
+    allview = None
+
+
     while pw.IsAlive(p1Proxy.PlayerID()) and \
           pw.IsAlive(p2Proxy.PlayerID()) and \
-          pw.CurrentTick() < max_game_length:
+          pw.CurrentTick() < MAX_GAME_TICKS:
         onestep = False
         if show_gui:
             for event in pygame.event.get():
@@ -157,15 +301,16 @@ def do_game(game_id, logger, p1, p2, pw, show_gui=False, max_game_length=500):
                             screen = pygame.display.set_mode(GAME_SIZE, 0 ,32)
                         view = 'p2'
             if(view == 'world'):
-                draw(pw, screen, background)
+                pwview.draw()
             elif(view == 'p1'):
-                draw(p1Proxy, screen, background)
+                p1view.draw()
             elif(view == 'p2'):
-                draw(p2Proxy, screen, background)
+                p2view.draw()
             elif(view == 'all'):
-                draw(p1Proxy, screen,background,(-GAME_SIZE[0],0))
-                draw(pw, screen, background, (0,0))
-                draw(p2Proxy, screen, background, (GAME_SIZE[0], 0))
+            	pass
+                # draw(p1Proxy, screen,background,(-GAME_SIZE[0],0))
+                # draw(pw, screen, background, (0,0))
+                # draw(p2Proxy, screen, background, (GAME_SIZE[0], 0))
             time_passed = clock.tick(fps)
         
         if((not paused) or onestep):
@@ -181,6 +326,7 @@ def do_game(game_id, logger, p1, p2, pw, show_gui=False, max_game_length=500):
             
             p1Proxy._Update(pw)
             p2Proxy._Update(pw)
+
     if p1Proxy.TotalShips() == p2Proxy.TotalShips():
         #tie
         winner = "no"
@@ -214,16 +360,11 @@ from Logger import Logger
 if __name__ == '__main__':
     log = Logger('./%s.log')
     try:
-        import psyco
-        psyco.full()
-    except ImportError:
-        pass
-    try:
         #import the two players
         from Players.VariableAggressionPlayer import VariableAggressionPlayer
         from Players.PredictingPlayer import PredictingPlayer
         bot1 = PredictingPlayer() #your player!
-        bot2 = VariableAggressionPlayer(0.08)
+        bot2 = VariableAggressionPlayer(0.5)
         
         pw = PlanetWars(open(sys.argv[1]).read(), logger=log.turn)
         do_game(1, log, bot1, bot2, pw, show_gui=True)

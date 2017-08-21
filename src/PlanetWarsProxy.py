@@ -14,6 +14,8 @@ class PlanetWarsProxy(object):
         self._winner = 0
         self._gameid = None
         self._orders = []
+        self._size = [0, 0]
+        self._offset = [0, 0]
         if(gamestate):
             self._ParseGameState(gamestate)
         
@@ -28,12 +30,12 @@ class PlanetWarsProxy(object):
             if tokens[0] == "P":
                 if len(tokens) != 7:
                     return 0
-                p = Planet( float(tokens[1]), #x
-                            float(tokens[2]), #y
-                            tokens[3], #planet id
-                            tokens[4], #owner id
-                            int(tokens[5]), #num_ships
-                            int(tokens[6])) #growth_rate
+                p = Planet( float(tokens[1]),   #x
+                            float(tokens[2]),   #y
+                                  tokens[3] ,   #planet id
+                                  tokens[4] ,   #owner id
+                              int(tokens[5]),   #num_ships
+                              int(tokens[6]))   #growth_rate
                 
                 if(p.Y() + p.GrowthRate() > self._extent[0]):
                     self._extent[0] = p.Y() + p.GrowthRate()
@@ -43,7 +45,8 @@ class PlanetWarsProxy(object):
                     self._extent[2] = p.Y() - p.GrowthRate()
                 if(p.X() - p.GrowthRate() < self._extent[3]):
                     self._extent[3] = p.X() - p.GrowthRate() 
-                
+                self._FindSize()
+
                 self._planets[p.ID()] = p
             elif tokens[0] == "F":
                 if len(tokens) != 8:
@@ -63,12 +66,26 @@ class PlanetWarsProxy(object):
                 self._winner = int(tokens[4])
             else:
                 return 0
+
         return 1
         
-    def _Extent(self):
-        return self._extent;
+    def _FindSize(self):
+        self._size[0] = self._extent[1] - self._extent[3]
+        self._size[1] = self._extent[0] - self._extent[2]
+        
+        if(self._extent[3] < 0):
+            self._offset[0] = abs(self._extent[3])
+        if(self._extent[2] < 0):
+            self._offset[1] = abs(self._extent[2])
         
     
+    def GetSize(self):
+        return self._size
+
+    def GetOffset(self):
+        return self._offset
+
+
     def NumPlanets(self):
         return len(self._planets)
     

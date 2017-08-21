@@ -58,7 +58,7 @@ class Fleet(Entity):
         source = self.Source()
         destination = self.DestinationPlanet();
         dy = destination.Y() - source.Y()
-        dy *= 1 - (float(self.TurnsRemaining()) / float(self.TotalTripLength()))
+        dy *= 1 - ( float(self.TurnsRemaining()) / float(self.TotalTripLength()))
         return source.Y() + dy
     
     def Progress(self):
