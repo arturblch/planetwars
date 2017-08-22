@@ -14,7 +14,7 @@ class PredictingPlayer(BasePlayer):
     Model = namedtuple('Model', ['planets', 'fleets'])
     Plan = namedtuple('Plan', ['turn', 'plan_id', 'source', 'dest', 'num_ships'])
     SCOUT_FLEET_SIZE = 1
-    MIN_SHIPS = 25
+    MIN_SHIPS = 10
     
     
     def __init__(self, id=None, scout_enabled=True):
