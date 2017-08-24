@@ -5,6 +5,7 @@ Created on 23/03/2011
 '''
 import sys
 import pygame
+import random
 
 
 from pygame.locals import *  #@UnusedWildImport
@@ -13,37 +14,34 @@ from pygame.locals import *  #@UnusedWildImport
 from PlanetWars import PlanetWars
 MAX_GAME_TICKS = 500
 
-GAME_SIZE = (500, 500)
+GAME_SIZE = (900, 900)
 SCREEN_SIZE = (3 * GAME_SIZE[0], GAME_SIZE[1])
 COLOUR = {
     "0": (200, 200, 200),
     "1": (255, 0, 0),
-    "2": (0, 0, 255),
-    "3": (0, 255, 0)
+    "2": (0, 255, 0),
+    "3": (0, 0, 255)
 }
-PLANET_MIN_R = 0.85
-PLANET_FACTOR = 0.05
+PLANET_MIN_R = 1
+PLANET_FACTOR = 0.1
 MARGIN = 20
 DISPLAY = True
 
+IMAGES = {}
+
+PLANET_ADDRES = '../planets/planet%d.png'
 
 class Drawer():
 
-    MARGIN = 20
-    PLANET_MIN_R = 0.85
-    PLANET_FACTOR = 0.05
-    COLOUR = {
-        "0": (200, 200, 200),
-        "1": (255, 0, 0),
-        "2": (0, 0, 255),
-        "3": (0, 255, 0)
-    }
 
-    def __init__(self, world, display, background=None, offset=(0, 0)):
+    def __init__(self, world, display,list_of_planets, background=None,clock = None, offset=(0, 0)):
         self.world = world
         self.display = display
+        self.list_of_planets = list_of_planets
         self.background = background
+        self.clock = clock
         self.offset = offset
+        self.list_rand_planets = {}
 
         self.display_size = []
         self.display_offset = []
@@ -89,29 +87,48 @@ class Drawer():
                                           (1 - self.world_res) / 2.0)
             self.display_size[0] = self.display_size[0] * self.world_res
 
+        self.background = pygame.transform.scale(self.background, (int(self.display_size[0]),
+                                                                  int(self.display_size[1])) )
         self.factor = (float(self.display_size[0]) / float(self.world_size[0]))
         self.surf = pygame.Surface(self.display_size)
-        if (self.background):
-            self.surf.blit(self.background, (0, 0))
+
+
+        for p in self.world.Planets():
+            randPl = self.list_of_planets[p.ID()]
+            plimg = pygame.image.load(PLANET_ADDRES % randPl)
+            plimg = plimg.convert_alpha()
+            self.list_rand_planets[p.ID()] = plimg
+
         self.has_fog = self.world.PlayerID() != 0
-        if (self.has_fog):
-            self.fog = pygame.Surface(self.display_size, flags=SRCALPHA)
-            self.fog.fill((128, 128, 128, 0))
+        self.fog = pygame.Surface(self.display_size, flags=SRCALPHA)
+
+    def colorize(self, image, newColor):
+
+        image = image.copy()
+        # zero out RGB values
+        image.fill(newColor + (255,), None, pygame.BLEND_RGBA_MULT)
+        # add in new RGB values
+        #image.fill(newColor[0:3], None, pygame.BLEND_RGB_ADD)
+
+        return image
 
     def draw_planets(self):
         for p in self.world.Planets():
-            screen_x = int(float(p.X() + self.world_offset[0]) * self.factor)
-            screen_y = int(float(p.Y() + self.world_offset[1]) * self.factor)
             radius = int((PLANET_MIN_R * self.factor) +
                          ((PLANET_FACTOR * self.factor) * p.GrowthRate()))
-            pygame.draw.circle(self.surf, COLOUR[p.Owner()],
-                               (screen_x, screen_y), radius)
+            screen_x = int(float(p.X() + self.world_offset[0]) * self.factor)
+            screen_y = int(float(p.Y() + self.world_offset[1]) * self.factor)
+            #pygame.draw.circle(self.surf, COLOUR[p.Owner()], (screen_x, screen_y), radius)
+            plimg = self.list_rand_planets[p.ID()]
+            plimg = pygame.transform.scale(plimg, (2*radius ,2*radius))
+            plimg = self.colorize(plimg, COLOUR[p.Owner()])
+            self.surf.blit(plimg, (screen_x - radius, screen_y-radius))
             if ((p.Owner() == self.world.PlayerID()) and self.has_fog):
                 pygame.draw.circle(self.fog, (0, 0, 0, 0), (screen_x,
                                                             screen_y),
                                    int(p.VisionRange() * self.factor))
             text = pygame.font.Font(None, 20).render(
-                str(p.NumShips()), False, (0, 0, 0))
+                str(p.NumShips()), False, (255,255,255))
             text_pos = (screen_x - (text.get_width() / 2),
                         screen_y - (text.get_height() / 2))
             self.surf.blit(text, text_pos)
@@ -134,20 +151,21 @@ class Drawer():
                                    int(f.VisionRange() * self.factor))
 
     def draw(self):
-        self.surf = pygame.Surface(self.display_size)
-        self.fog = pygame.Surface(self.display_size, flags=SRCALPHA)
+        self.surf.fill((128, 128, 128, 0))
+        self.surf.blit(self.background, (0,0))
         self.fog.fill((128, 128, 128, 0))
-        if (self.background):
-            self.surf.blit(self.background, (0, 0))
         self.draw_fleet()
         self.draw_planets()
-
         if (self.has_fog):
             self.surf.blit(self.fog, (0, 0), special_flags=BLEND_SUB)
         self.surf.blit(
             pygame.font.Font(None, 22).render(
-                str(self.world.CurrentTick()), False, (255, 255, 255)), (20,
-                                                                         20))
+                str(self.world.CurrentTick()), False, (255, 255, 255)), 
+                                                      (20, 20))
+        self.surf.blit(
+            pygame.font.Font(None, 22).render(
+                str(self.clock.get_fps()), False, (255, 255, 255)),
+                            (self.display_size[0] - 20, self.display_size[1] - 20))
         self.display.blit(self.surf, self.display_offset)
         pygame.display.update()
 
@@ -199,10 +217,11 @@ def do_game(
     #min_100_ships = lambda p, pw: 100
     #p1 = VariableAggressionPlayer(0.2, min_100_ships)
     #p2 = VariableAggressionPlayer(0.2, min_100_ships)
-    p1view = Drawer(p1Proxy, screen, background)
-    p2view = Drawer(p2Proxy, screen, background)
-    pwview = Drawer(pw, screen, background)
-
+    list_of_planets = {p.ID():random.randint(1,18) for p in pw.Planets()}
+    p1view = Drawer(p1Proxy, screen, list_of_planets, background, clock, )
+    p2view = Drawer(p2Proxy, screen, list_of_planets, background, clock)
+    pwview = Drawer(pw, screen, list_of_planets, background, clock)
+    #allview = Drawer()
 
     while pw.IsAlive(p1Proxy.PlayerID()) and \
           pw.IsAlive(p2Proxy.PlayerID()) and \
@@ -247,9 +266,10 @@ def do_game(
                 p2view.draw()
             elif (view == 'all'):
                 pass
+
             # draw(p1Proxy, screen,background,(-GAME_SIZE[0],0))
             # draw(pw, screen, background, (0,0))
-            # draw(p2Proxy, screen, background, (GAME_SIZE[0], 0))
+            # draw(p2Proxy, screen, background, )
             time_passed = clock.tick(fps)
 
         if ((not paused) or onestep):
