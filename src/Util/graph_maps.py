@@ -46,25 +46,27 @@ def draw_map(id, map):
     plot. Returns the plot.
     '''
     fig = plt.figure()
+    plt.gca().invert_yaxis()
     
     x = []
     y = []
-    s = []
-    c = []
+    size = []
+    color = []
     for planet in map:
         x.append(planet[0])
         y.append(planet[1])
-        s.append((10 + planet[2] * 2) ** 2)
+        size.append((10 + planet[2] * 2) ** 2)
         if planet[3] == "0":
-            c.append([0.25, 0.25, 0.25])
+            color.append([0.25, 0.25, 0.25])
         elif planet[3] == "1":
-            c.append([0, 0, 1])
+            color.append([0, 0, 1])
         else:
-            c.append([1, 0, 0])
+            color.append([1, 0, 0])
     ax = fig.add_subplot(111)
-    ax.scatter(x, y, c=c, s=s)
+    ax.scatter(x, y, c=color, s=size)
     ax.set_title("Layout of map %d" % id)
     
+
     return fig
 
 def draw_map_graphs(maps, file_pattern, func=draw_map, output_latex=None, latex_caption="Map %d"):
@@ -124,6 +126,7 @@ def draw_map_histogram(id, map, from_perspective="1", bins=25):
     return fig
 
 if __name__ == '__main__':
-    id, map = read_map_from_file('../../newmaps/map1.txt')
+    id, map = read_map_from_file('../../newmaps/map3.txt')
     fig = draw_map(id, map)
-    fig.savefig('../test-map1.pdf')
+    fig.savefig('../test-map1.pdf',aspect='auto')
+    plt.show()
