@@ -62,7 +62,7 @@ class PlanetWars(PlanetWarsProxy):
             if (max == second):
                 #p.Owner() stays the same
 
-                self.logger("{0:4d}: Player {1} defended planet {2}".format(
+                self.logger("{0:4d}: Player {1} defended planet {2} (has 0 shiips)".format(
                     self._tick, owner, p.ID()))
             else:
                 if (p.Owner() == owner):
