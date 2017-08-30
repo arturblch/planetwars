@@ -299,7 +299,7 @@ def do_game(
         #p2 wins!
         winner = p2.__module__
 
-    logger.result("Game {0}: {1} victory at turn {2} - {3}: {4}, {5}: {6}".
+    logger.result("Game {0}: {1} victory at turn {2} \n {3}: {4}, {5}: {6}".
                   format(game_id, winner,
                          pw.CurrentTick(), p1.__module__,
                          p1Proxy.TotalShips(), p2.__module__, p2Proxy.TotalShips()))
