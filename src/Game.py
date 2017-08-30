@@ -12,9 +12,11 @@ from pygame.locals import *  #@UnusedWildImport
 
 #from Players import *
 from PlanetWars import PlanetWars
+
+
 MAX_GAME_TICKS = 500
 
-GAME_SIZE = (900, 900)
+GAME_SIZE = (500, 500)
 SCREEN_SIZE = (3 * GAME_SIZE[0], GAME_SIZE[1])
 COLOUR = {
     "0": (200, 200, 200),
@@ -30,6 +32,7 @@ DISPLAY = True
 IMAGES = {}
 
 PLANET_ADDRES = '../planets/planet%d.png'
+MAPS_ADDRES = '../newmaps/%s.txt'
 
 class Drawer():
 
@@ -72,20 +75,20 @@ class Drawer():
         self.world_size = self.world.GetSize()
         self.world_offset = self.world.GetOffset()
 
-        if self.world_size[1] == 0:
-            pass
-        else:
-            self.world_res = float(self.world_size[0]) / float(
+        print self.world_size, ' - self.world_size'
+
+        self.world_res = float(self.world_size[0]) / float(
                 self.world_size[1])
 
+        print self.world_res,  ' - world_res'
+        print self.display_res,  ' - display_res'
+
         if self.world_res > self.display_res:
-            self.display_offset[1] += int(self.display_size[1] *
-                                          (1 - 1 / self.world_res) / 2.0)
+            self.display_offset[1] += int((self.display_size[1] - self.display_size[0] / self.world_res) / 2.0)
             self.display_size[1] = self.display_size[0] / self.world_res
         else:
-            self.display_offset[0] += int(self.display_size[0] *
-                                          (1 - self.world_res) / 2.0)
-            self.display_size[0] = self.display_size[0] * self.world_res
+            self.display_offset[0] += int((self.display_size[0] - self.display_size[1] * self.world_res) / 2.0)
+            self.display_size[0] = self.display_size[1] * self.world_res
 
         self.background = pygame.transform.scale(self.background, (int(self.display_size[0]),
                                                                   int(self.display_size[1])) )
@@ -291,19 +294,19 @@ def do_game(
         winner = "no"
     elif p1Proxy.TotalShips() > p2Proxy.TotalShips():
         #p1 wins!
-        winner = p1.id
+        winner = p1.__module__
     else:
         #p2 wins!
-        winner = p2.id
+        winner = p2.__module__
 
     logger.result("Game {0}: {1} victory at turn {2} - {3}: {4}, {5}: {6}".
                   format(game_id, winner,
-                         pw.CurrentTick(), p1.id,
-                         p1Proxy.TotalShips(), p2.id, p2Proxy.TotalShips()))
+                         pw.CurrentTick(), p1.__module__,
+                         p1Proxy.TotalShips(), p2.__module__, p2Proxy.TotalShips()))
     logger.data("{0}:{1}:{2}:{3}:{4},{5}:{6},{7}".format(
         game_id, pw._gameid, winner,
-        pw.CurrentTick(), p1.id,
-        p1Proxy.TotalShips(), p2.id, p2Proxy.TotalShips()))
+        pw.CurrentTick(), p1.__module__,
+        p1Proxy.TotalShips(), p2.__module__, p2Proxy.TotalShips()))
 
 
 from Logger import Logger
@@ -313,12 +316,12 @@ if __name__ == '__main__':
     try:
         #import the two players
         from Players.VariableAggressionPlayer import VariableAggressionPlayer
-        from Players.PredictingPlayer import PredictingPlayer
+        from Players.Dave2Player import Dave2Player
         from Players.ScoutPlayer import ScoutPlayer
-        bot1 = PredictingPlayer()  #your player!
-        bot2 = ScoutPlayer()
+        bot1 = Dave2Player()  #your player!
+        bot2 = VariableAggressionPlayer(0.5)
 
-        pw = PlanetWars(open(sys.argv[1]).read(), logger=log.turn)
+        pw = PlanetWars(open(MAPS_ADDRES % sys.argv[1]).read(), logger=log.turn)
         do_game(1, log, bot1, bot2, pw, show_gui=True)
     except KeyboardInterrupt:
         print 'ctrl-c, leaving ...'
