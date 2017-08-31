@@ -128,5 +128,5 @@ def draw_map_histogram(id, map, from_perspective="1", bins=25):
 if __name__ == '__main__':
     id, map = read_map_from_file('../../newmaps/map3.txt')
     fig = draw_map(id, map)
-    fig.savefig('../test-map1.pdf',aspect='auto')
+    fig.savefig('../test-map1.pdf')
     plt.show()

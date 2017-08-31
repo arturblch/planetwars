@@ -5,33 +5,28 @@ Created on 15/09/2011
 '''
 
 import sys
-import re
 import matplotlib.pyplot as plt
 
+bot1 = "Dave2Player"
+
 if __name__ == '__main__':
-    infile = file(sys.argv[1], 'r')
-    
-    points = [[], []]
-    idreg = "id=([0-9]+).*id=([0-9]+)"
-    victoryreg = "([12]) victory"
-    str = infile.readline()
-    while str != "":
-        coord = re.search(idreg, str).groups()
-        str = infile.readline()
-        g = re.search(victoryreg, str)
-        if g:
-            if g.groups()[0] == '2':
-                points[0].append(coord[1])
-                points[1].append(coord[0])
-            else:
-                points[0].append(coord[0])
-                points[1].append(coord[1])
-        else:
-            #tie
-            pass
-        str = infile.readline()
-    
+    file = open(sys.argv[1]).read()
+    x = []
+    y1 = []
+    y2 = []
+    lines = file.split("\n")
+    for line in lines:
+        tokens = line.split(':')
+        if len(tokens) <3:
+            break
+        x.append(int(tokens[0]))
+        y1.append(int(tokens[4].split(',')[1]))
+        y2.append(int(tokens[5].split(',')[1]))
+        y2 = map(lambda i: -i,y2)
+
+   
     #for each point, draw them on a bitmap
-    plt.plot(points[0], points[1], 'r.')
-    plt.savefig(sys.argv[2])
-    
+    plt.bar(x, y1, facecolor='#9999ff', edgecolor='white')
+    plt.bar(x, y2, facecolor='#ff9999', edgecolor='white')
+    plt.savefig('../scatter.pdf')
+    plt.show()

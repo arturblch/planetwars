@@ -48,7 +48,7 @@ def make_data(file_name):
     infile = file(file_name, 'r')
     
     idreg = "id=([0-9]+).*id=([0-9]+).*map ([0-9]+)"
-    victoryreg = "([0-9]+) victory at turn ([0-9]+) - [0-9]+: ([0-9]+), [0-9]+: ([0-9]+)"
+    victoryreg = "([0-9]+) victory at turn ([0-9]+) -\n [0-9]+: ([0-9]+), [0-9]+: ([0-9]+)"
     line = infile.readline()
     data_by_map = {}
     matchups = {}
@@ -170,6 +170,7 @@ if __name__ == '__main__':
     #let's make some data!
     data, match = make_data(sys.argv[1])
     
-    plt.savefig(sys.argv[2])
+    plt.savefig('../avg_scatter.pdf')
+    plt.show()
     
 
