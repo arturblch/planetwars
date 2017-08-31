@@ -10,6 +10,8 @@ import Players
 from PlanetWars import PlanetWars
 from PlanetWarsProxy import PlanetWarsProxy
 
+MAPS_ADDRES = '../newmaps/map%d.txt'
+
 def parse_config(config_file):
     pass
     
@@ -77,8 +79,8 @@ def batch_run(bots, maps, log_path, start_id=1, end_id=None):
         for i in range(len(bots)):
             for j in range(i + 1, len(bots)):
                 if game_id >= start_id and game_id <= end_id:
-                    bot1 = bots[i]['type'](**bots[i]['params'])
-                    bot2 = bots[j]['type'](**bots[j]['params'])
+                    bot1 = bots[i]()
+                    bot2 = bots[j]()
                     status_str = "Starting game %d, %s vs %s on map %d" % (game_id, bot1, bot2, map_id)
                     log.result(status_str)
                     print status_str
@@ -94,10 +96,12 @@ if __name__ == '__main__':
     #parse_config(config_file)
     min_ships = lambda id, pw: 100
     bots = []
-    for i in range(10):
-        bots.append({'type': Players.VariableAggressionPlayer.VariableAggressionPlayer,
-                     'params': {'conservativeness': i/10.0}})
-    
-    maps = [file('../newmaps/map1.txt', 'r').read(), file('../newmaps/map2.txt', 'r').read()]
+    # for i in range(10):
+    #     bots.append({'type': Players.VariableAggressionPlayer.VariableAggressionPlayer,
+    #                  'params': {'conservativeness': i/10.0}})
+    bots.append(Players.Dave2Player)
+    bots.append(Players.Dave2Player_old)
+
+    maps = [open(MAPS_ADDRES % m).read() for m in range(1,101)]
     batch_run(bots, maps, '%s.log')
     
