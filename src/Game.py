@@ -220,17 +220,18 @@ def do_game(
     #min_100_ships = lambda p, pw: 100
     #p1 = VariableAggressionPlayer(0.2, min_100_ships)
     #p2 = VariableAggressionPlayer(0.2, min_100_ships)
-    list_of_planets = {p.ID():random.randint(1,18) for p in pw.Planets()}
-    p1view = Drawer(p1Proxy, screen, list_of_planets, background, clock, )
-    p2view = Drawer(p2Proxy, screen, list_of_planets, background, clock)
-    pwview = Drawer(pw, screen, list_of_planets, background, clock)
-    #allview = Drawer()
+    
 
     while pw.IsAlive(p1Proxy.PlayerID()) and \
           pw.IsAlive(p2Proxy.PlayerID()) and \
           pw.CurrentTick() < MAX_GAME_TICKS:
         onestep = False
         if show_gui:
+            list_of_planets = {p.ID():random.randint(1,18) for p in pw.Planets()}
+            p1view = Drawer(p1Proxy, screen, list_of_planets, background, clock, )
+            p2view = Drawer(p2Proxy, screen, list_of_planets, background, clock)
+            pwview = Drawer(pw, screen, list_of_planets, background, clock)
+            #allview = Drawer()
             for event in pygame.event.get():
                 if event.type == QUIT:
                     return
@@ -294,19 +295,19 @@ def do_game(
         winner = "no"
     elif p1Proxy.TotalShips() > p2Proxy.TotalShips():
         #p1 wins!
-        winner = p1.__module__
+        winner = p1.__module__.split('.')[1] # Player.BotName
     else:
         #p2 wins!
-        winner = p2.__module__
+        winner = p2.__module__.split('.')[1]
 
     logger.result("Game {0}: {1} victory at turn {2} \n {3}: {4}, {5}: {6}".
                   format(game_id, winner,
-                         pw.CurrentTick(), p1.__module__,
-                         p1Proxy.TotalShips(), p2.__module__, p2Proxy.TotalShips()))
+                         pw.CurrentTick(), p1.__module__.split('.')[1],
+                         p1Proxy.TotalShips(), p2.__module__.split('.')[1], p2Proxy.TotalShips()))
     logger.data("{0}:{1}:{2}:{3}:{4},{5}:{6},{7}".format(
         game_id, pw._gameid, winner,
-        pw.CurrentTick(), p1.__module__,
-        p1Proxy.TotalShips(), p2.__module__, p2Proxy.TotalShips()))
+        pw.CurrentTick(), p1.__module__.split('.')[1],
+        p1Proxy.TotalShips(), p2.__module__.split('.')[1], p2Proxy.TotalShips()))
 
 
 from Logger import Logger
@@ -317,9 +318,10 @@ if __name__ == '__main__':
         #import the two players
         from Players.VariableAggressionPlayer import VariableAggressionPlayer
         from Players.Dave2Player import Dave2Player
+        from Players.Dave2Player_old import Dave2Player_old
         from Players.ScoutPlayer import ScoutPlayer
-        bot1 = Dave2Player()  #your player!
-        bot2 = VariableAggressionPlayer(0.5)
+        bot1 = Dave2Player_old(1)#VariableAggressionPlayer(0.5) #your player!
+        bot2 = Dave2Player()
 
         pw = PlanetWars(open(MAPS_ADDRES % sys.argv[1]).read(), logger=log.turn)
         do_game(1, log, bot1, bot2, pw, show_gui=True)
