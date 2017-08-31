@@ -17,7 +17,6 @@ class Dave2Player(BasePlayer):
     Has an extended front line instead of a single planet
     Attacks from multiple points instead of 1
     Sends defence to planets under attack
-    Still no scouting
     '''
 
     def __init__(self, id=None):
@@ -36,6 +35,7 @@ class Dave2Player(BasePlayer):
         self._pw = pw
         self.turn += 1
         pw.log("%d" % self.turn)
+
         if len(pw.MyPlanets()) == 0:
             return
         if self.scout == None or pw.GetFleet(self.scout) == None:
@@ -45,6 +45,7 @@ class Dave2Player(BasePlayer):
             self.update_scout(pw)
 
         #if no enemy planets left in sight, take neutrals then terminate turn
+
         if len(pw.EnemyPlanets()) == 0:
             for neutral in pw.NeutralPlanets():
                 for planet in pw.MyPlanets():
@@ -112,7 +113,6 @@ class Dave2Player(BasePlayer):
             if forceRequired < closestFriendly.NumShips() and forceRequired > 0:
                 pw.IssueOrder(closestFriendly, planet, forceRequired)
 
-
     def get_sc_target(self, pw):
         en_planets = pw.EnemyPlanets()
         if len(pw.EnemyPlanets()) > 0:
@@ -132,21 +132,22 @@ class Dave2Player(BasePlayer):
         target = self.get_sc_target(pw)
 
         if target:
-            best_planets = sorted(pw.MyPlanets(), key=lambda pl: pl.DistanceTo(target))
+            best_planets = sorted(
+                pw.MyPlanets(), key=lambda pl: pl.DistanceTo(target))
             for pl in best_planets:
-                if pl.NumShips() < 1:
+                if pl.NumShips() < 1 or (pl == target):
                     continue
-                self.scout = pw.IssueOrder(pl, target, 1) 
+                self.scout = pw.IssueOrder(pl, target, 1)
                 return
 
     def update_scout(self, pw):
         scout = pw.GetFleet(self.scout)
-        if len(pw.MyPlanets()) == 0 or scout.DestinationPlanet().Owner() == pw.PlayerID():
+        if len(pw.MyPlanets()) == 0 \
+            or scout.DestinationPlanet().Owner() == pw.PlayerID():
             return
         if scout.TurnsRemaining() == 1:
             target = self.get_sc_target(pw)
-            self.scout = pw.IssueOrder(scout, target, 1)   
-
+            self.scout = pw.IssueOrder(scout, target, 1)
 
     def SortByDist(self, x):
         return x.DistanceTo(self.SubFrontLine(self._pw.MyPlanets(), x))
