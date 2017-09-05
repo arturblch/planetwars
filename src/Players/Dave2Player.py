@@ -55,6 +55,7 @@ class Dave2Player(BasePlayer):
                         if planet.NumShips() >= neutral.NumShips() + 1:
                             pw.IssueOrder(planet, neutral,
                                           neutral.NumShips() + 1)
+                            pw.log()
             return
 
         #check neutrals
@@ -145,6 +146,7 @@ class Dave2Player(BasePlayer):
                 if pl.NumShips() < 1 or (pl == target):
                     continue
                 self.scouts.append(pw.IssueOrder(pl, target, 1))
+                pw.log('%3.d :: Sent scout: from P(%s) to P(%s)' % (self.turn, pl.ID(), target.ID()))
                 return
 
     def update_scouts(self, pw):
@@ -159,6 +161,7 @@ class Dave2Player(BasePlayer):
             if fleet.TurnsRemaining() == 1:
                 target = self.get_sc_target(pw)
                 self.scouts[i] = pw.IssueOrder(fleet, target, 1)
+                pw.log('%3.d :: Change target of scout to P(%s)' % (self.turn, target.ID()))
 
     def SortByDist(self, x):
         return x.DistanceTo(self.SubFrontLine(self._pw.MyPlanets(), x))
