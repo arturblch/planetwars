@@ -75,13 +75,8 @@ class Drawer():
         self.world_size = self.world.GetSize()
         self.world_offset = self.world.GetOffset()
 
-        print self.world_size, ' - self.world_size'
-
         self.world_res = float(self.world_size[0]) / float(
                 self.world_size[1])
-
-        print self.world_res,  ' - world_res'
-        print self.display_res,  ' - display_res'
 
         if self.world_res > self.display_res:
             self.display_offset[1] += int((self.display_size[1] - self.display_size[0] / self.world_res) / 2.0)
@@ -198,10 +193,10 @@ def do_game(
     #  - update each proxy with the real world
     #  - render the current state
     #  - pause for framerate?
+
     p1Proxy = pw.MakeProxy("1", logger.p1log)
     p2Proxy = pw.MakeProxy("2", logger.p2log)
     fps = 4
-
     if show_gui:
         pygame.init()
         view = 'world'
@@ -218,6 +213,7 @@ def do_game(
         p1view = Drawer(p1Proxy, screen, list_of_planets, background, clock, )
         p2view = Drawer(p2Proxy, screen, list_of_planets, background, clock)
         pwview = Drawer(pw, screen, list_of_planets, background, clock)
+        #allview = Drawer()
     else:
         paused = False
 
@@ -232,7 +228,6 @@ def do_game(
         onestep = False
         if show_gui:
             
-            #allview = Drawer()
             for event in pygame.event.get():
                 if event.type == QUIT:
                     return
@@ -321,8 +316,8 @@ if __name__ == '__main__':
         from Players.Dave2Player import Dave2Player
         from Players.Dave2Player_old import Dave2Player_old
         from Players.ScoutPlayer import ScoutPlayer
-        bot1 = Dave2Player_old(1)#VariableAggressionPlayer(0.5) #your player!
-        bot2 = Dave2Player()
+        bot1 = Dave2Player() #your player!
+        bot2 = Dave2Player_old()
 
         pw = PlanetWars(open(MAPS_ADDRES % sys.argv[1]).read(), logger=log.turn)
         do_game(1, log, bot1, bot2, pw, show_gui=True)
