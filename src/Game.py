@@ -198,6 +198,9 @@ def do_game(
     #  - update each proxy with the real world
     #  - render the current state
     #  - pause for framerate?
+    p1Proxy = pw.MakeProxy("1", logger.p1log)
+    p2Proxy = pw.MakeProxy("2", logger.p2log)
+    fps = 4
 
     if show_gui:
         pygame.init()
@@ -211,12 +214,13 @@ def do_game(
         background = pygame.image.load("../space.jpg").convert_alpha()
         clock = pygame.time.Clock()
         paused = True
+        list_of_planets = {p.ID():random.randint(1,18) for p in pw.Planets()}
+        p1view = Drawer(p1Proxy, screen, list_of_planets, background, clock, )
+        p2view = Drawer(p2Proxy, screen, list_of_planets, background, clock)
+        pwview = Drawer(pw, screen, list_of_planets, background, clock)
     else:
         paused = False
 
-    p1Proxy = pw.MakeProxy("1", logger.p1log)
-    p2Proxy = pw.MakeProxy("2", logger.p2log)
-    fps = 4
     #min_100_ships = lambda p, pw: 100
     #p1 = VariableAggressionPlayer(0.2, min_100_ships)
     #p2 = VariableAggressionPlayer(0.2, min_100_ships)
@@ -227,10 +231,7 @@ def do_game(
           pw.CurrentTick() < MAX_GAME_TICKS:
         onestep = False
         if show_gui:
-            list_of_planets = {p.ID():random.randint(1,18) for p in pw.Planets()}
-            p1view = Drawer(p1Proxy, screen, list_of_planets, background, clock, )
-            p2view = Drawer(p2Proxy, screen, list_of_planets, background, clock)
-            pwview = Drawer(pw, screen, list_of_planets, background, clock)
+            
             #allview = Drawer()
             for event in pygame.event.get():
                 if event.type == QUIT:
