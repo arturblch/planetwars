@@ -127,7 +127,7 @@ class PlanetWars(PlanetWarsProxy):
         return r
 
     def IsAlive(self, player_id):
-        if (len(self.MyPlanets(player_id)) > 0):
+        if (len(self.MyPlanets(player_id)) > 0 or len(self.MyFleets(player_id)) > 0):
             return True
         return False
 
