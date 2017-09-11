@@ -29,23 +29,21 @@ class Dave2Player(BasePlayer):
         self.workingSet = 0
         self.turn = 0
         self._pw = None
-        self.scouts = []
-        self.scouts_targets = []
+        self.scouts = {}
 
     def DoTurn(self, pw):
         self._pw = pw
         self.turn += 1
         pw.log("%d" % self.turn)
-
         if len(pw.MyPlanets()) == 0:
             return
         if self.scouts:
-            self.update_scouts(pw)
+            self.update_scouts()
         if len(self.scouts)< 5:
             while len(self.scouts) < 5 :
-                self.send_scout(pw)
-        
-
+                status = self.send_scout()
+                if not status:
+                    break
         #if no enemy planets left in sight, take neutrals then terminate turn
 
         if len(pw.EnemyPlanets()) == 0:
@@ -116,52 +114,52 @@ class Dave2Player(BasePlayer):
             if forceRequired < closestFriendly.NumShips() and forceRequired > 0:
                 pw.IssueOrder(closestFriendly, planet, forceRequired)
 
-    def get_sc_target(self, pw):
-        en_planets = filter(lambda x: x not in self.scouts_targets, pw.EnemyPlanets())
+    def get_sc_target(self):
+        en_planets = [pl for pl in self._pw.EnemyPlanets() if pl.ID() not in self.scouts.values()]
         if len(en_planets) > 0:
             target = en_planets[0]
             for pl in en_planets:
                 if target.VisionAge() < pl.VisionAge():
                     target = pl
-            self.scouts_targets.append(target)
             return target
-        net_planets = filter(lambda x: x not in self.scouts_targets, pw.NeutralPlanets())
-           
+        net_planets = en_planets = [pl for pl in self._pw.NeutralPlanets() if pl.ID() not in self.scouts.values()]
         if len(net_planets) > 0:
             target = net_planets[0]
             for pl in net_planets:
                 if target.VisionAge() < pl.VisionAge():
                     target = pl
-            self.scouts_targets.append(target)
             return target
         else:
-            return pw.MyPlanets()[0]
+            return self._pw.MyPlanets()[0]
 
-    def send_scout(self, pw):
-        target = self.get_sc_target(pw)
+    def send_scout(self):
+        target = self.get_sc_target()
         if target:
             best_planets = sorted(
-                pw.MyPlanets(), key=lambda pl: pl.DistanceTo(target))
-            for pl in best_planets:
-                if pl.NumShips() < 1 or (pl == target):
-                    continue
-                self.scouts.append(pw.IssueOrder(pl, target, 1))
-                pw.log('%3.d :: Sent scout: from P(%s) to P(%s)' % (self.turn, pl.ID(), target.ID()))
-                return
+                self._pw.MyPlanets(), key=lambda pl: pl.DistanceTo(target))
+            if best_planets:
+                for pl in best_planets:
+                    if pl.NumShips() < 1 or (pl == target):
+                        continue
+                    self.scouts.update({self._pw.IssueOrder(pl, target, 1):target.ID()})
+                    self._pw.log('%3.d :: Sent scout: from P(%s) to P(%s)' % (self.turn, pl.ID(), target.ID()))
+                    return True
+        return False
+    
+    def change_target(self, fleet):
+        target = self.get_sc_target()
+        self.scouts.update({self._pw.IssueOrder(fleet, target, 1):target.ID()})
+        self._pw.log('%3.d :: Change target of scout to P(%s)' % (self.turn, target.ID()))
 
-    def update_scouts(self, pw):
-        for i, scout in enumerate(self.scouts):
-            fleet = pw.GetFleet(scout)
-            if fleet == None:
-                self.scouts.remove(scout)
-                continue
-            if len(pw.MyPlanets()) == 0 \
-                or fleet.DestinationPlanet().Owner() == pw.PlayerID():
+    def update_scouts(self):
+        self.scouts = dict(filter(lambda x: self._pw.GetFleet(x[0]), self.scouts.items())) # filtered any 'None' fleet
+        for scout in self.scouts.items():
+            fleet = self._pw.GetFleet(scout[0])
+            if len(self._pw.MyPlanets()) == 0 or fleet.DestinationPlanet().Owner() == self._pw.PlayerID():
                 continue
             if fleet.TurnsRemaining() == 1:
-                target = self.get_sc_target(pw)
-                self.scouts[i] = pw.IssueOrder(fleet, target, 1)
-                pw.log('%3.d :: Change target of scout to P(%s)' % (self.turn, target.ID()))
+                self.change_target(fleet)
+                
 
     def SortByDist(self, x):
         return x.DistanceTo(self.SubFrontLine(self._pw.MyPlanets(), x))
