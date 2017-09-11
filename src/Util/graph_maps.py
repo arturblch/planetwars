@@ -29,16 +29,7 @@ def read_map_from_file(map_name):
     mapfile.close()
     return read_map(game_data)
 
-def read_maps(base_path='../newmaps/', max_map=100):
-    '''
-    Takes a path and will load all maps from 1 to max_map (inclusive)
-    '''
-    result = {}
-    for i in range(1, max_map + 1):
-        map_data = read_map_from_file(base_path + "map%d.txt" % i)
-        result[map_data[0]] = map_data[1]
-        
-    return result
+
 
 def draw_map(id, map):
     '''
@@ -64,69 +55,14 @@ def draw_map(id, map):
             color.append([1, 0, 0])
     ax = fig.add_subplot(111)
     ax.scatter(x, y, c=color, s=size)
-    ax.set_title("Layout of map %d" % id)
+    ax.set_title("test_map")
     
 
     return fig
 
-def draw_map_graphs(maps, file_pattern, func=draw_map, output_latex=None, latex_caption="Map %d"):
-    '''
-    takes a dict of mapid: maps, draws all the map layouts
-    Also takes a file_pattern, which must contain one %d for map name and should
-    end in .pdf
-    '''
-    if output_latex:
-        outfile = open(output_latex, 'w')
-        outfile.write("\\begin{figure}\n\t\\centering")
-        i = 0
-    else:
-        outfile = None
-    
-    for id, mapdata in maps.items():
-        plot = func(id, mapdata)
-        plot.savefig(file_pattern % id)
-        if outfile:
-            outfile.write("\t\\subfloat[%s]{\\includegraphics[width=6cm]{%s}}" % (latex_caption % id, file_pattern % id))
-            i += 1
-            if i % 9 == 0:
-                outfile.write("""\label{LABEL}
-\end{figure}
-\begin{figure}
-    \ContinuedFloat
-    \centering""")
-            elif i % 3 == 0:
-                outfile.write("\\\\")
-            
-            outfile.write("\n")
-
-def dist(p1, p2):
-    dx = p1[0] - p2[0]
-    dy = p1[1] - p2[1]
-    return int(ceil(sqrt(dx ** 2 + dy ** 2)))
-
-def draw_map_histogram(id, map, from_perspective="1", bins=25):
-    #read the map and make a list of distances
-    distances = []
-    
-    for p in map:
-        if p[3] == from_perspective:
-            source = p
-            break
-    
-    for p in map:
-        if p == source: continue
-        distances.append(dist(source, p))
-        
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    plt.xlim(0, 35)
-    plt.ylim(0, 0.35)
-    n, bins, patches = ax.hist(distances, bins, normed=1, facecolor='green', alpha=0.75)
-    
-    return fig
 
 if __name__ == '__main__':
-    id, map = read_map_from_file('../../newmaps/map3.txt')
+    id, map = read_map_from_file('../../newmaps/map0.txt')
     fig = draw_map(id, map)
-    fig.savefig('../test-map1.pdf')
+    fig.savefig('map.pdf')
     plt.show()
