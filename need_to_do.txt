@@ -1,0 +1,11 @@
+create setNumFleet() in Entity
+remove it from NumFleet()
+
+create setOwner() in Entiry
+remove it from Owner()
+
+change parameters order in __init__ planet
+
+
+
+fix coordinates dublicates() x() y() and location in one class
