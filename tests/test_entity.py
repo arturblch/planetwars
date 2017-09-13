@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 from src import Location
 from src import Entity
@@ -116,4 +114,3 @@ class Test_Entity():
                                                          }
 
 
-# def GetInRange(self, list):
