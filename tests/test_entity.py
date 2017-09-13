@@ -62,17 +62,20 @@ class Test_Entity():
 
     def test_remove_ships(self, one_entity):
         self.test_entity.RemoveShips(1)
-        assert self.test_entity.NumShips() == 49, \
-        'Entity RemoveShips with nagetive error'
+        assert self.test_entity.NumShips() == 49, 'Entity RemoveShips with '\
+                                                + 'nagetive error'
         with pytest.raises(ValueError):
             self.test_entity.RemoveShips(-1)
+        self.test_entity.NumShips(1)    
+        with pytest.raises(ValueError):
+            self.test_entity.RemoveShips(2)
 
     def test_add_ships(self, one_entity):
         self.test_entity.AddShips(1)
-        assert self.test_entity.NumShips() == 51, \
-        'Entity RemoveShips with nagetive error'
+        assert self.test_entity.NumShips() == 51, 'Entity AddShips with '\
+                                                + 'nagetive error'
         with pytest.raises(ValueError):
-            self.test_entity.RemoveShips(-1)
+            self.test_entity.AddShips(-1)
 
     def test_owner(self, one_entity):
         assert self.test_entity.Owner() == 1, 'Entity Owner error'
@@ -106,7 +109,7 @@ class Test_Entity():
                      Entity.Entity(3, 3, 4, 50, 2),
                      Entity.Entity(4, 4, 5, 50, 2)
                     )
-        self.test_entity.VisionRange = lambda : 2
+        self.test_entity.VisionRange = lambda : 2 #mock
         assert self.test_entity.GetInRange(test_list) == {
                                                           2: test_list[1],
                                                           3: test_list[2]
