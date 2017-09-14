@@ -11,7 +11,7 @@ import random
 from pygame.locals import *  #@UnusedWildImport
 
 #from Players import *
-from .PlanetWars import PlanetWars
+from src.PlanetWars import PlanetWars
 
 
 MAX_GAME_TICKS = 500
