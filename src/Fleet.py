@@ -20,12 +20,8 @@ class Fleet(Entity):
         self._turns_remaining = self._total_trip_length - progress
         super(Fleet, self).__init__(self.X(), self.Y(), fleet_id, num_ships, owner_id)
     
-    def GetInRange(self, list, ignoredest=True):
+    def GetInRange(self, list):
         result = super(Fleet, self).GetInRange(list)
-        if((self.TurnsRemaining() == 1) and (not result.has_key(self._destination_planet.ID()))
-           and (not ignoredest)):
-            result[self._destination_planet.ID()] = self._destination_planet
-        
         return result
     
     def VisionRange(self):
