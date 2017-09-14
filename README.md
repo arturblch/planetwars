@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/arturblch/planetwars.svg?branch=master)](https://travis-ci.org/arturblch/planetwars)
 [![Coverage Status](https://coveralls.io/repos/github/arturblch/planetwars/badge.svg?branch=master)](https://coveralls.io/github/arturblch/planetwars?branch=master)
  
+ 
  PlanetWars is a simple turn based strategy game based on Galcon and the Google AI Challenge.It has been modified to include rerouting fleets in flight and fog of war.
 ## 1.  Gameplay
 PlanetWars takes place in a “system” of planets, which are statically located in a 2-dimensional space.
