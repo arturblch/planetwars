@@ -1,4 +1,5 @@
 import pytest
+
 from src import Fleet
 from src import Planet
 from src import Location
@@ -7,6 +8,7 @@ from src import Location
 class TestFleet():
     @pytest.fixture
     def one_fleet(self, request):
+
         self.test_planet = Planet.Planet(0, 0, 1, 1, 50, 2)
         self.test_fleet = Fleet.Fleet(1, 1, 50, 5, 5, self.test_planet)
 

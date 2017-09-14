@@ -11,7 +11,7 @@ import random
 from pygame.locals import *  #@UnusedWildImport
 
 #from Players import *
-from PlanetWars import PlanetWars
+from .PlanetWars import PlanetWars
 
 
 MAX_GAME_TICKS = 500
@@ -306,7 +306,7 @@ def do_game(
         p1Proxy.TotalShips(), p2.__module__.split('.')[1], p2Proxy.TotalShips()))
 
 
-from Logger import Logger
+from .Logger import Logger
 
 if __name__ == '__main__':
     log = Logger('./%s.log')
@@ -322,6 +322,6 @@ if __name__ == '__main__':
         pw = PlanetWars(open(MAPS_ADDRES % sys.argv[1]).read(), logger=log.turn)
         do_game(1, log, bot1, bot2, pw, show_gui=True)
     except KeyboardInterrupt:
-        print 'ctrl-c, leaving ...'
+        print('ctrl-c, leaving ...')
     finally:
         log.flush()

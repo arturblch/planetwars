@@ -1,4 +1,4 @@
-from Entity import Entity
+from .Entity import Entity
 
 class Planet(Entity):
     PLANET_RANGE = 5

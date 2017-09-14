@@ -1,5 +1,5 @@
-from Fleet import Fleet
-from Planet import Planet
+from .Fleet import Fleet
+from .Planet import Planet
 import uuid
 
 class PlanetWarsProxy(object):

@@ -1,5 +1,5 @@
-from Fleet import Fleet
-from PlanetWarsProxy import PlanetWarsProxy
+from .Fleet import Fleet
+from .PlanetWarsProxy import PlanetWarsProxy
 import logging
 
 

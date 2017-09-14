@@ -3,8 +3,7 @@ Created on 01/07/2011
 
 @author: Michael
 '''
-from Location import Location
-
+from .Location import Location
 class Entity(object):
     '''
     An abstract class representing something in the game world.

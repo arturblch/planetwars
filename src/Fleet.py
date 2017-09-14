@@ -1,5 +1,5 @@
-from Location import Location
-from Entity import Entity
+from .Location import Location
+from .Entity import Entity
 
 class Fleet(Entity):
     FLEET_RANGE = 2
