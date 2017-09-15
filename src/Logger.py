@@ -3,6 +3,7 @@ Created on 26/09/2011
 
 @author: Michael
 '''
+import pathlib
 
 class Logger(object):
     '''
@@ -30,7 +31,8 @@ class Logger(object):
         self.flush_file('data', self.log_data)
         
     def flush_file(self, filename, log):
-        temp_file = open(self.pattern % filename, 'w')
+        pathlib.Path(self.pattern).mkdir(parents=True, exist_ok=True) 
+        temp_file = open(self.pattern + filename + '.log', 'w')
         temp_file.writelines(log)
         temp_file.close()
         

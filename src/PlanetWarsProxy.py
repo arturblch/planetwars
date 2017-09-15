@@ -99,7 +99,7 @@ class PlanetWarsProxy(object):
         return total
 
     def GetPlanet(self, planet_id):
-        if(self._planets.has_key(planet_id)):
+        if(planet_id  in self._planets):
             return self._planets[planet_id]
         else:
             return None
@@ -108,7 +108,7 @@ class PlanetWarsProxy(object):
         return len(self._fleets)
 
     def GetFleet(self, fleet_id):
-        if(self._fleets.has_key(fleet_id)):
+        if(fleet_id  in self._fleets):
             return self._fleets[fleet_id]
         else:
             return None
@@ -257,7 +257,7 @@ class PlanetWarsProxy(object):
                 planetsinview[planet.ID()] = pw.GetPlanet(planet.ID())
         
         for my_fleet in pw.MyFleets(self._playerid):
-            planetsinview.update(my_fleet.GetInRange(pw.Planets(), False))
+            planetsinview.update(my_fleet.GetInRange(pw.Planets()))
             fleetsinview.update(my_fleet.GetInRange(pw.Fleets()))
             
         for planet in planetsinview.values():
@@ -265,7 +265,7 @@ class PlanetWarsProxy(object):
             self._planets[planet.ID()].VisionAge(0)
         
         for id, planet in self._planets.items():
-            if not planetsinview.has_key(id):
+            if  id not  in planetsinview:
                 planet.VisionAge(planet.VisionAge() + 1)
             
         #clear out the fleet list, if they aren't in view they disappear

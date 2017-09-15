@@ -2,8 +2,8 @@
 Davebot mk.II
 @author: David Howden
 '''
-from BasePlayer import BasePlayer
-from Location import Location
+from .BasePlayer import BasePlayer
+from ..Location import Location
 
 #import copy
 #x = copy.copy(y)        # make a shallow copy of y

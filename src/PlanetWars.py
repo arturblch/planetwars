@@ -28,7 +28,7 @@ class PlanetWars(PlanetWarsProxy):
 
             #phase 3a
             if (fleet.TurnsRemaining() == 0):
-                if (not arrivals.has_key(fleet.DestinationPlanet())):
+                if (fleet.DestinationPlanet() not in arrivals):
                     arrivals[fleet.DestinationPlanet()] = [fleet]
                 else:
                     arrivals[fleet.DestinationPlanet()].append(fleet)
@@ -38,12 +38,12 @@ class PlanetWars(PlanetWarsProxy):
             forces = {}
             for f in arrivals[p]:
                 self._fleets.pop(f.ID())
-                if forces.has_key(f.Owner()):
+                if f.Owner() in forces:
                     forces[f.Owner()] += f.NumShips()
                 else:
                     forces[f.Owner()] = f.NumShips()
             #add the current occupier of the planet
-            if forces.has_key(p.Owner()):
+            if p.Owner() in forces:
                 forces[p.Owner()] += p.NumShips()
             else:
                 forces[p.Owner()] = p.NumShips()

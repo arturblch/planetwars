@@ -3,7 +3,7 @@ Predicting Player Class
 
 @author: Michael Jensen
 '''
-from BasePlayer import BasePlayer
+from .BasePlayer import BasePlayer
 from collections import namedtuple, deque
 
 class PredictingPlayer(BasePlayer):

@@ -1,6 +1,7 @@
 from .Location import Location
 from .Entity import Entity
-
+import sys
+sys.path.append('../')
 class Fleet(Entity):
     FLEET_RANGE = 2
     #the size of the fleet will add some vision range

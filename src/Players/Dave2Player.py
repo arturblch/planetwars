@@ -3,8 +3,8 @@ Davebot mk.II
 
 @author: David Howden
 '''
-from BasePlayer import BasePlayer
-from Location import Location
+from .BasePlayer import BasePlayer
+from ..Location import Location
 
 #import copy
 #x = copy.copy(y)        # make a shallow copy of y
@@ -148,17 +148,20 @@ class Dave2Player(BasePlayer):
     
     def change_target(self, fleet):
         target = self.get_sc_target()
-        self.scouts.update({self._pw.IssueOrder(fleet, target, 1):target.ID()})
+        scout = {self._pw.IssueOrder(fleet, target, 1):target.ID()}
         self._pw.log('%3.d :: Change target of scout to P(%s)' % (self.turn, target.ID()))
+        return scout
 
     def update_scouts(self):
+        temp_scouts = {}
         self.scouts = dict(filter(lambda x: self._pw.GetFleet(x[0]), self.scouts.items())) # filtered any 'None' fleet
         for scout in self.scouts.items():
             fleet = self._pw.GetFleet(scout[0])
             if len(self._pw.MyPlanets()) == 0 or fleet.DestinationPlanet().Owner() == self._pw.PlayerID():
                 continue
             if fleet.TurnsRemaining() == 1:
-                self.change_target(fleet)
+                temp_scouts.update(self.change_target(fleet))
+        self.scouts.update(temp_scouts)
                 
 
     def SortByDist(self, x):

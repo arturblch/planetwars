@@ -4,7 +4,7 @@ Created on 23/03/2011
 @author: Michael
 '''
 
-from BasePlayer import BasePlayer
+from .BasePlayer import BasePlayer
 
 class BasicPlayer(BasePlayer):
     def __init__(self, id=None):

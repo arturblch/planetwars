@@ -16,7 +16,7 @@ SAFETY_SHIPS = 5                #additional ships to be safe
 ATTACK_SIZE = 100               #Minimum size of a planet before it will attack
 REALLY_BIG_NUMBER = 10000000    #Just a big number
 
-from BasePlayer import BasePlayer
+from .BasePlayer import BasePlayer
 
 class ScoutPlayer(BasePlayer):
     def __init__(self, id=None):

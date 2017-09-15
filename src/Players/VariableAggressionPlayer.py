@@ -4,7 +4,7 @@ Created on 15/09/2011
 @author: Michael
 '''
 
-from BasePlayer import BasePlayer
+from .BasePlayer import BasePlayer
 
 def min_100_ships(planet, pw):
     return 100

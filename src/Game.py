@@ -6,12 +6,16 @@ Created on 23/03/2011
 import sys
 import pygame
 import random
-
-
+from pprint import pprint
 from pygame.locals import *  #@UnusedWildImport
 
-#from Players import *
-from src.PlanetWars import PlanetWars
+
+from .PlanetWars import PlanetWars
+from .Logger import Logger
+
+
+
+
 
 
 MAX_GAME_TICKS = 500
@@ -31,8 +35,9 @@ DISPLAY = True
 
 IMAGES = {}
 
-PLANET_ADDRES = '../planets/planet%d.png'
-MAPS_ADDRES = '../newmaps/%s.txt'
+PLANET_ADDRES = './planets/planet%d.png'
+MAPS_ADDRES = './newmaps/%s.txt'
+BACKGROUND_IMAGE = "./space.jpg"
 
 class Drawer():
 
@@ -206,7 +211,7 @@ def do_game(
             window_size = GAME_SIZE
 
         screen = pygame.display.set_mode(window_size, 0, 32)
-        background = pygame.image.load("../space.jpg").convert_alpha()
+        background = pygame.image.load(BACKGROUND_IMAGE).convert_alpha()
         clock = pygame.time.Clock()
         paused = True
         list_of_planets = {p.ID():random.randint(1,18) for p in pw.Planets()}
@@ -306,16 +311,16 @@ def do_game(
         p1Proxy.TotalShips(), p2.__module__.split('.')[1], p2Proxy.TotalShips()))
 
 
-from .Logger import Logger
+
 
 if __name__ == '__main__':
-    log = Logger('./%s.log')
+    log = Logger('./Log/')
     try:
         #import the two players
-        from Players.VariableAggressionPlayer import VariableAggressionPlayer
-        from Players.Dave2Player import Dave2Player
-        from Players.Dave2Player_old import Dave2Player_old
-        from Players.ScoutPlayer import ScoutPlayer
+        from .Players.VariableAggressionPlayer import VariableAggressionPlayer
+        from .Players.Dave2Player import Dave2Player
+        from .Players.Dave2Player_old import Dave2Player_old
+        from .Players.ScoutPlayer import ScoutPlayer
         bot1 = Dave2Player() #your player!
         bot2 = Dave2Player_old()
 
