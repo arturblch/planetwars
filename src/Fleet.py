@@ -1,7 +1,7 @@
 from .Location import Location
 from .Entity import Entity
-import sys
-sys.path.append('../')
+
+
 class Fleet(Entity):
     FLEET_RANGE = 2
     #the size of the fleet will add some vision range
@@ -9,7 +9,7 @@ class Fleet(Entity):
     FLEET_FACTOR = 0
     
     def __init__(self, fleet_id, owner_id, num_ships, source_x, source_y, \
-                 destination_planet, progress=0):
+                 destination_planet,  progress=0):
         self._source = Location(source_x, source_y)
         self._destination_planet = destination_planet
         self._total_trip_length = self._source.DistanceTo(destination_planet)
