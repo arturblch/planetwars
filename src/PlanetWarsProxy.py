@@ -18,7 +18,29 @@ class PlanetWarsProxy(object):
         self._offset = [0, 0]
         if(gamestate):
             self._ParseGameState(gamestate)
+
+    def _ParsePlanet(self, tokens):
+        if len(tokens) != 7:
+            return 0
+        p = Planet( float(tokens[1]),   # x
+                    float(tokens[2]),   # y
+                          tokens[3] ,   # planet id
+                          tokens[4] ,   # owner id
+                      int(tokens[5]),   # num_ships
+                      int(tokens[6]))   # growth_rate
         
+        if(p.Y() + p.GrowthRate() > self._extent[0]):
+            self._extent[0] = p.Y() + p.GrowthRate()
+        if(p.X() + p.GrowthRate() > self._extent[1]):
+            self._extent[1] = p.X() + p.GrowthRate()
+        if(p.Y() - p.GrowthRate() < self._extent[2]):
+            self._extent[2] = p.Y() - p.GrowthRate()
+        if(p.X() - p.GrowthRate() < self._extent[3]):
+            self._extent[3] = p.X() - p.GrowthRate() 
+        self._FindSize()
+        self._planets[p.ID()] = p
+  
+
     def _ParseGameState(self, state):
         lines = state.split("\n")
         
@@ -28,26 +50,7 @@ class PlanetWarsProxy(object):
             if len(tokens) == 1:
                 continue
             if tokens[0] == "P":
-                if len(tokens) != 7:
-                    return 0
-                p = Planet( float(tokens[1]),   #x
-                            float(tokens[2]),   #y
-                                  tokens[3] ,   #planet id
-                                  tokens[4] ,   #owner id
-                              int(tokens[5]),   #num_ships
-                              int(tokens[6]))   #growth_rate
-                
-                if(p.Y() + p.GrowthRate() > self._extent[0]):
-                    self._extent[0] = p.Y() + p.GrowthRate()
-                if(p.X() + p.GrowthRate() > self._extent[1]):
-                    self._extent[1] = p.X() + p.GrowthRate()
-                if(p.Y() - p.GrowthRate() < self._extent[2]):
-                    self._extent[2] = p.Y() - p.GrowthRate()
-                if(p.X() - p.GrowthRate() < self._extent[3]):
-                    self._extent[3] = p.X() - p.GrowthRate() 
-                self._FindSize()
-
-                self._planets[p.ID()] = p
+                self._ParsePlanet(tokens)
             elif tokens[0] == "F":
                 if len(tokens) != 8:
                     return 0
