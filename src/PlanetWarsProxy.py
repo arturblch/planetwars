@@ -2,13 +2,13 @@ from .Fleet import Fleet
 from .Planet import Planet
 import uuid
 
+
 class PlanetWarsProxy(object):
     NEUTRAL_PLAYER = "0"
-    
+
     def __init__(self, gamestate=None):
         self._planets = {}
         self._fleets = {}
-        self._extent = [0, 0, 0, 0]
         self._tick = 0
         self._playerid = None
         self._winner = 0
@@ -16,52 +16,47 @@ class PlanetWarsProxy(object):
         self._orders = []
         self._size = [0, 0]
         self._offset = [0, 0]
-        if(gamestate):
+        if (gamestate):
             self._ParseGameState(gamestate)
 
     def _ParsePlanet(self, tokens):
         if len(tokens) != 7:
             return 0
-        p = Planet( float(tokens[1]),   # x
-                    float(tokens[2]),   # y
-                          tokens[3] ,   # planet id
-                          tokens[4] ,   # owner id
-                      int(tokens[5]),   # num_ships
-                      int(tokens[6]))   # growth_rate
-        
-        if(p.Y() + p.GrowthRate() > self._extent[0]):
-            self._extent[0] = p.Y() + p.GrowthRate()
-        if(p.X() + p.GrowthRate() > self._extent[1]):
-            self._extent[1] = p.X() + p.GrowthRate()
-        if(p.Y() - p.GrowthRate() < self._extent[2]):
-            self._extent[2] = p.Y() - p.GrowthRate()
-        if(p.X() - p.GrowthRate() < self._extent[3]):
-            self._extent[3] = p.X() - p.GrowthRate() 
-        self._FindSize()
+        p = Planet(
+            float(tokens[1]),  # x
+            float(tokens[2]),  # y
+            tokens[3],  # planet id
+            tokens[4],  # owner id
+            int(tokens[5]),  # num_ships
+            int(tokens[6]))  # growth_rate
         self._planets[p.ID()] = p
-  
+        return p
+
+    # def _ParseFleet(self, tokens):
+    #     if len(tokens) != 8:
+    #         return 0
+    #     f = Fleet(
+    #         int(tokens[1]),  # Fleet ID
+    #         int(tokens[2]),  # Owner
+    #         int(tokens[3]),  # NumShips
+    #         int(tokens[4]),  # Source X
+    #         int(tokens[5]),  # Source Y
+    #         int(tokens[6]),  # Destination
+    #         int(tokens[7]))  # Progress
+    #     self._fleets[f.FleetID()] = f
 
     def _ParseGameState(self, state):
         lines = state.split("\n")
-        
+
         for line in lines:
-            line = line.split("#")[0] # remove comments
+            line = line.split("#")[0]  # remove comments
             tokens = line.split(" ")
             if len(tokens) == 1:
                 continue
             if tokens[0] == "P":
                 self._ParsePlanet(tokens)
-            elif tokens[0] == "F":
-                if len(tokens) != 8:
-                    return 0
-                f = Fleet(  int(tokens[1]), # Fleet ID
-                            int(tokens[2]), # Owner
-                            int(tokens[3]), # NumShips
-                            int(tokens[4]), # Source X
-                            int(tokens[5]), # Source Y
-                            int(tokens[6]), # Destination
-                            int(tokens[7])) # Progress
-                self._fleets[f.FleetID()] = f
+            # elif tokens[0] == "F":
+            #     self._ParseFleet(tokens)
             elif tokens[0] == "M":
                 self._gameid = int(tokens[1])
                 self._playerid = int(tokens[2])
@@ -69,40 +64,54 @@ class PlanetWarsProxy(object):
                 self._winner = int(tokens[4])
             else:
                 return 0
-
+        self._FindSize()
         return 1
-        
+
     def _FindSize(self):
-        self._size[0] = self._extent[1] - self._extent[3]
-        self._size[1] = self._extent[0] - self._extent[2]
-        
-        if(self._extent[3] < 0):
-            self._offset[0] = abs(self._extent[3])
-        if(self._extent[2] < 0):
-            self._offset[1] = abs(self._extent[2])
-        
-    
+        extent = [0, 0, 0, 0]
+        for p in self._planets.values():
+            if (p.Y() + p.GrowthRate() > extent[0]):
+                extent[0] = p.Y() + p.GrowthRate()
+            if (p.X() + p.GrowthRate() > extent[1]):
+                extent[1] = p.X() + p.GrowthRate()
+            if (p.Y() - p.GrowthRate() < extent[2]):
+                extent[2] = p.Y() - p.GrowthRate()
+            if (p.X() - p.GrowthRate() < extent[3]):
+                extent[3] = p.X() - p.GrowthRate()
+        self._size[0] = extent[1] - extent[3]
+        self._size[1] = extent[0] - extent[2]
+
+        if (extent[3] < 0):
+            self._offset[0] = abs(extent[3])
+        if (extent[2] < 0):
+            self._offset[1] = abs(extent[2])
+
+
+    def SetSize(self, size, offset):
+        self._size = size
+        self._offset = offset
+
+
     def GetSize(self):
         return self._size
 
     def GetOffset(self):
         return self._offset
 
-
     def NumPlanets(self):
         return len(self._planets)
-    
+
     def TotalShips(self):
         total = 0
         for planet in self.MyPlanets():
             total += planet.NumShips()
         for fleet in self.MyFleets():
             total += fleet.NumShips()
-        
+
         return total
 
     def GetPlanet(self, planet_id):
-        if(planet_id  in self._planets):
+        if (planet_id in self._planets):
             return self._planets[planet_id]
         else:
             return None
@@ -111,7 +120,7 @@ class PlanetWarsProxy(object):
         return len(self._fleets)
 
     def GetFleet(self, fleet_id):
-        if(fleet_id  in self._fleets):
+        if (fleet_id in self._fleets):
             return self._fleets[fleet_id]
         else:
             return None
@@ -193,93 +202,95 @@ class PlanetWarsProxy(object):
         num_ships = int(num_ships)
         if num_ships <= 0:
             raise ValueError("You must send 1 or more ships!")
-        if(type(destination_planet) == Planet):
+        if (type(destination_planet) == Planet):
             dest = destination_planet
         else:
             dest = self.GetPlanet(destination_planet)
-        if(not dest):
-            raise ValueError("You must pass a valid Planet as the destination!")
-        if(type(source) == Fleet):
+        if (not dest):
+            raise ValueError(
+                "You must pass a valid Planet as the destination!")
+        if (type(source) == Fleet):
             f = source
         else:
-            f = self.GetFleet(source);
-        if(f):
+            f = self.GetFleet(source)
+        if (f):
             return self.FleetOrder(f, dest, num_ships)
-        if(type(source) == Planet):
+        if (type(source) == Planet):
             p = source
         else:
             p = self.GetPlanet(source)
-        if(p):
+        if (p):
             return self.PlanetOrder(p, dest, num_ships)
         else:
             raise ValueError("You must pass a fleet or planet or an ID.")
-    
+
     def FleetOrder(self, source_fleet, destination_planet, num_ships):
         source_fleet.RemoveShips(num_ships)
         fleetid = uuid.uuid4()
-        self._orders.append(('fleet', source_fleet.ID(), fleetid, num_ships, destination_planet.ID()))
+        self._orders.append(('fleet', source_fleet.ID(), fleetid, num_ships,
+                             destination_planet.ID()))
         return fleetid
-    
+
     def PlanetOrder(self, source_planet, destination_planet, num_ships):
         source_planet.RemoveShips(num_ships)
         fleetid = uuid.uuid4()
-        self._orders.append(('planet', source_planet.ID(), fleetid, num_ships, destination_planet.ID()))
+        self._orders.append(('planet', source_planet.ID(), fleetid, num_ships,
+                             destination_planet.ID()))
         return fleetid
-    
+
     def PlayerID(self):
         return self._playerid
-        
+
     def _GetOrders(self):
         return self._orders
-    
+
     def _ClearOrders(self):
         self._orders = []
-        
+
     def _Update(self, pw, playerid=None, first_turn=False):
-        if((playerid is not None) and (self._playerid is None)):
+        if ((playerid is not None) and (self._playerid is None)):
             self._playerid = playerid
-        if(playerid is None and self._playerid is not None):
+        if (playerid is None and self._playerid is not None):
             playerid = self._playerid
-        if(playerid is None):
+        if (playerid is None):
             raise ValueError("No player id, can't determine what's in range!")
         planetsinview = {}
         fleetsinview = {}
         self._tick = pw.CurrentTick()
-        
-        if(first_turn):
+
+        if (first_turn):
             planets = pw.Planets()
             for planet in planets:
                 planetsinview[planet.ID()] = planet
-        
+
         for my_planet in pw.MyPlanets(self._playerid):
             planetsinview.update(my_planet.GetInRange(pw.Planets()))
             fleetsinview.update(my_planet.GetInRange(pw.Fleets()))
-        
+
         for planet in self.MyPlanets():
-            if(pw.GetPlanet(planet.ID()).Owner() != planet.Owner()):
+            if (pw.GetPlanet(planet.ID()).Owner() != planet.Owner()):
                 planetsinview[planet.ID()] = pw.GetPlanet(planet.ID())
-        
+
         for my_fleet in pw.MyFleets(self._playerid):
             planetsinview.update(my_fleet.GetInRange(pw.Planets()))
             fleetsinview.update(my_fleet.GetInRange(pw.Fleets()))
-            
+
         for planet in planetsinview.values():
             self._planets[planet.ID()] = planet.Copy()
             self._planets[planet.ID()].VisionAge(0)
-        
+
         for id, planet in self._planets.items():
-            if  id not  in planetsinview:
+            if id not in planetsinview:
                 planet.VisionAge(planet.VisionAge() + 1)
-            
+
         #clear out the fleet list, if they aren't in view they disappear
         self._fleets = {}
         for fleet in fleetsinview.values():
             self._fleets[fleet.ID()] = fleet.Copy()
             self._fleets[fleet.ID()].VisionAge(0)
-            
+
     def _EndGame(self, winnerid):
         self._winner = winnerid
-    
+
     def CurrentTick(self):
         return self._tick
-    

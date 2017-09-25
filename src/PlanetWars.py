@@ -133,8 +133,7 @@ class PlanetWars(PlanetWarsProxy):
 
     def MakeProxy(self, player_id, logger=None):
         result = PlanetWarsProxy()
-        result._extent = self._extent
-        result._FindSize()
+        result.SetSize(self._size, self._offset)
         result._Update(self, player_id, True)
         if logger:
             result.log = logger
