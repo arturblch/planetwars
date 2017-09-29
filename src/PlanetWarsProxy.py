@@ -55,7 +55,7 @@ class PlanetWarsProxy(object):
                 continue
             if tokens[0] == "P":
                 self._ParsePlanet(tokens)
-            # elif tokens[0] == "F":
+            # elif tokens[0] == "F":            #useless
             #     self._ParseFleet(tokens)
             elif tokens[0] == "M":
                 self._gameid = int(tokens[1])
