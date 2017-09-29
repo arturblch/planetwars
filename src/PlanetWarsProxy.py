@@ -98,6 +98,21 @@ class PlanetWarsProxy(object):
     def GetOffset(self):
         return self._offset
 
+    def PlayerID(self):
+        return self._playerid
+
+    def CurrentTick(self):
+        return self._tick
+
+    def _GetOrders(self):
+        return self._orders
+
+    def _ClearOrders(self):
+        self._orders = []
+
+    def _EndGame(self, winnerid):
+        self._winner = winnerid
+
     def NumPlanets(self):
         return len(self._planets)
 
@@ -180,22 +195,19 @@ class PlanetWarsProxy(object):
             if fleet.Owner() != self.PlayerID():
                 r.append(fleet)
         return r
-
-    def _ToString(self):
-        s = ''
-        s+= "M %d %d %d %d\n" % \
-            (self._gameid, self._playerid, self._tick, self._winnerid)
-        for p in self._planets:
-            s += "P %f %f %d %d %d\n" % \
-             (p.X(), p.Y(), p.Owner(), p.NumShips(), p.GrowthRate())
-        for f in self._fleets:
-            s += "F %d %d %d %d %d %d\n" % \
-             (f.Owner(), f.NumShips(), f.SourcePlanet(), f.DestinationPlanet(), \
-                f.TotalTripLength(), f.TurnsRemaining())
-        return s
-
-    def Distance(self, source, destination):
-        return source.DistanceTo(destination)
+    #  == Save Function ==
+    # def _ToString(self):
+    #     s = ''
+    #     s+= "M %d %d %d %d\n" % \
+    #         (self._gameid, self._playerid, self._tick, self._winnerid)
+    #     for p in self._planets:
+    #         s += "P %f %f %d %d %d\n" % \
+    #          (p.X(), p.Y(), p.Owner(), p.NumShips(), p.GrowthRate())
+    #     for f in self._fleets:
+    #         s += "F %d %d %d %d %d %d\n" % \
+    #          (f.Owner(), f.NumShips(), f.SourcePlanet(), f.DestinationPlanet(), \
+    #             f.TotalTripLength(), f.TurnsRemaining())
+    #     return s
 
     def IssueOrder(self, source, destination_planet, num_ships):
         #is source a fleet or planet?
@@ -238,15 +250,6 @@ class PlanetWarsProxy(object):
                              destination_planet.ID()))
         return fleetid
 
-    def PlayerID(self):
-        return self._playerid
-
-    def _GetOrders(self):
-        return self._orders
-
-    def _ClearOrders(self):
-        self._orders = []
-
     def _Update(self, pw, playerid=None, first_turn=False):
         if ((playerid is not None) and (self._playerid is None)):
             self._playerid = playerid
@@ -288,9 +291,4 @@ class PlanetWarsProxy(object):
         for fleet in fleetsinview.values():
             self._fleets[fleet.ID()] = fleet.Copy()
             self._fleets[fleet.ID()].VisionAge(0)
-
-    def _EndGame(self, winnerid):
-        self._winner = winnerid
-
-    def CurrentTick(self):
-        return self._tick
+   
