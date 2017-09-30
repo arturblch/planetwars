@@ -27,6 +27,17 @@ class TestPlanetWarsProxy():
         result = self.test_proxy._ParsePlanet(test_planet)
         assert type(result) == Planet
 
+    def test_parse_game_state(self, base_setup):
+        test_map = 'M 1 0 0 0\n'\
+                     + 'P 2 2 1 1 50 4\n'\
+                     + 'P 15 15 2 2 50 4\n'\
+                     + 'P 4 14 3 0 50 4\n'\
+                     + 'G 123 asd\n'
+        self.test_proxy._ParseGameState(test_map)
+        assert self.test_proxy._planets[1] == Planet(2, 2, 1, '1', 50, 4)
+        assert self.test_proxy._planets[2] == Planet(15, 15, 2, '2', 50, 4)
+        assert self.test_proxy._planets[3] == Planet(4, 14, 3, '0', 50, 4)
+
     def test_find_size(self, base_setup, set_planets):
         self.test_proxy._FindSize()
 
