@@ -309,7 +309,7 @@ def do_game(
         game_id, pw._gameid, winner,
         pw.CurrentTick(), p1.__module__.split('.')[1],
         p1Proxy.TotalShips(), p2.__module__.split('.')[1], p2Proxy.TotalShips()))
-
+    return 1
 
 
 
