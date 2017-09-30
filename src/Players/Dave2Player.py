@@ -53,7 +53,6 @@ class Dave2Player(BasePlayer):
                         if planet.NumShips() >= neutral.NumShips() + 1:
                             pw.IssueOrder(planet, neutral,
                                           neutral.NumShips() + 1)
-                            pw.log()
             return
 
         #check neutrals
