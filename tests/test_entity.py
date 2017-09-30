@@ -9,6 +9,13 @@ class Test_Location():
         assert location.X() == 1, 'Location X error'
         assert location.Y() == 2, 'Location Y error'
 
+    def test_location_equal(self):
+        location1 = Location(1, 2)
+        location2 = Location(1, 2)
+        location3 = Location(2, 3)
+        assert location1 == location2
+        assert location1 != location3
+
     def test_location_distance_to(self):
         location1 = Location(0, 0)
         location2 = Location(3, 4)
@@ -18,7 +25,7 @@ class Test_Location():
 class Test_Entity():
     @pytest.fixture
     def one_entity(self, request):
-        self.test_entity = Entity(1, 2, 34, 50, 1)
+        self.test_entity = Entity(1, 2, 1, 50, 1)
 
         def teardown():
             del self.test_entity
@@ -29,7 +36,7 @@ class Test_Entity():
     @pytest.fixture
     def tow_entity(self, request):
         self.test_entity1 = Entity(0, 0, 1, 50, 1)
-        self.test_entity2 = Entity(3, 4, 1, 50, 1)
+        self.test_entity2 = Entity(3, 4, 2, 50, 1)
 
         def teardown():
             del self.test_entity1
@@ -37,6 +44,12 @@ class Test_Entity():
 
         request.addfinalizer(teardown)
         return 'add test_entity1 and test_entity2'
+
+    def test_entity_equal(self, one_entity):
+        self.test_entity1 = Entity(1, 2, 1, 50, 1)
+        self.test_entity2 = Entity(1, 2, 2, 50, 1)
+        assert self.test_entity == self.test_entity1
+        assert self.test_entity != self.test_entity2
 
     def test_location_coordinats(self, one_entity):
         assert type(self.test_entity.Location()) == \
@@ -49,7 +62,7 @@ class Test_Entity():
             self.test_entity2) == 5, 'Entity Distance error'
 
     def test_id(self, one_entity):
-        assert self.test_entity.ID() == 34, 'Entity ID error'
+        assert self.test_entity.ID() == 1, 'Entity ID error'
 
     def test_num_ships(self, one_entity):
         assert self.test_entity.NumShips() == 50, 'Entity NumShips error'
