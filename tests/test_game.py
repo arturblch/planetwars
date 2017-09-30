@@ -21,4 +21,4 @@ class TestGame():
         self.pw = PlanetWars(test_map, logger=self.log.turn)
 
     def test_do_game(self):
-        Game.do_game(1, self.log, self.bot1, self.bot2, self.pw)
+       assert Game.do_game(1, self.log, self.bot1, self.bot2, self.pw) == 1
