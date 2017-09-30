@@ -17,7 +17,13 @@ class Entity(object):
         self._numships = numships
         self._owner = owner_id
         self._vision_age = 99999
-    
+
+    def __eq__(self, other):
+        return self._id == other._id
+
+    def __hash__(self):
+        return id(self)
+
     def Location(self):
         return self._location
     

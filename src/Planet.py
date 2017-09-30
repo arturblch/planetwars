@@ -10,6 +10,12 @@ class Planet(Entity):
         super(Planet, self).__init__(x, y, planet_id, num_ships, owner_id)
         self._growth_rate = growth_rate
     
+    def __eq__(self, other):
+        return self._id == other._id
+
+    def __hash__(self):
+        return id(self)
+
     def VisionRange(self):
         return self.PLANET_RANGE + (self.GrowthRate() * self.PLANET_FACTOR)
 

@@ -14,6 +14,9 @@ class Location(object):
         self._x = x
         self._y = y
         
+    def __eq__(self, other):
+        return self._x == other._x and self._y == other._y
+        
     def X(self):
         return self._x
     
