@@ -9,3 +9,5 @@ change parameters order in __init__ planet
 
 
 fix coordinates dublicates() x() y() and location in one class
+
+pw.tick() error:  unhashable type:'Planet'
