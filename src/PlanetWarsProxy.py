@@ -20,12 +20,10 @@ class PlanetWarsProxy(object):
             self._ParseGameState(gamestate)
 
     def _ParsePlanet(self, tokens):
-        if len(tokens) != 7:
-            return 0
         p = Planet(
             float(tokens[1]),  # x
             float(tokens[2]),  # y
-            tokens[3],  # planet id
+            int(tokens[3]),  # planet id
             tokens[4],  # owner id
             int(tokens[5]),  # num_ships
             int(tokens[6]))  # growth_rate
@@ -53,7 +51,7 @@ class PlanetWarsProxy(object):
             tokens = line.split(" ")
             if len(tokens) == 1:
                 continue
-            if tokens[0] == "P":
+            if tokens[0] == "P" and len(tokens) == 7:
                 self._ParsePlanet(tokens)
             # elif tokens[0] == "F":            #useless
             #     self._ParseFleet(tokens)
@@ -63,9 +61,8 @@ class PlanetWarsProxy(object):
                 self._tick = int(tokens[3])
                 self._winner = int(tokens[4])
             else:
-                return 0
+                continue
         self._FindSize()
-        return 1
 
     def _FindSize(self):
         extent = [0, 0, 0, 0]
@@ -223,16 +220,10 @@ class PlanetWarsProxy(object):
                 "You must pass a valid Planet as the destination!")
         if (type(source) == Fleet):
             f = source
-        else:
-            f = self.GetFleet(source)
-        if (f):
             return self.FleetOrder(f, dest, num_ships)
-        if (type(source) == Planet):
+        elif (type(source) == Planet):
             p = source
-        else:
-            p = self.GetPlanet(source)
-        if (p):
-            return self.PlanetOrder(p, dest, num_ships)
+            return self.PlanetOrder(p, dest, num_ships)            
         else:
             raise ValueError("You must pass a fleet or planet or an ID.")
 
