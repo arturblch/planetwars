@@ -241,13 +241,17 @@ class PlanetWarsProxy(object):
                              destination_planet.ID()))
         return fleetid
 
-    def _Update(self, pw, playerid=None, first_turn=False):
-        if ((playerid is not None) and (self._playerid is None)):
+    def SetPlayerId(self, playerid):
+        if not playerid:
+            raise ValueError("No player id!")
+        else:
             self._playerid = playerid
-        if (playerid is None and self._playerid is not None):
-            playerid = self._playerid
-        if (playerid is None):
+
+
+    def _Update(self, pw, first_turn=False):
+        if (not self._playerid):
             raise ValueError("No player id, can't determine what's in range!")
+        
         planetsinview = {}
         fleetsinview = {}
         self._tick = pw.CurrentTick()
@@ -255,31 +259,28 @@ class PlanetWarsProxy(object):
         if (first_turn):
             planets = pw.Planets()
             for planet in planets:
-                planetsinview[planet.ID()] = planet
+                planetsinview[planet.ID()] = planet  # View all planets at first step
 
-        for my_planet in pw.MyPlanets(self._playerid):
-            planetsinview.update(my_planet.GetInRange(pw.Planets()))
-            fleetsinview.update(my_planet.GetInRange(pw.Fleets()))
 
+        for my_entity in pw.MyPlanets(self._playerid)+ pw.MyFleets(self._playerid):
+            planetsinview.update(my_entity.GetInRange(pw.Planets()))
+            fleetsinview.update(my_entity.GetInRange(pw.Fleets()))              # View all enttitys if range 
+
+        
         for planet in self.MyPlanets():
             if (pw.GetPlanet(planet.ID()).Owner() != planet.Owner()):
-                planetsinview[planet.ID()] = pw.GetPlanet(planet.ID())
-
-        for my_fleet in pw.MyFleets(self._playerid):
-            planetsinview.update(my_fleet.GetInRange(pw.Planets()))
-            fleetsinview.update(my_fleet.GetInRange(pw.Fleets()))
+                planetsinview[planet.ID()] = pw.GetPlanet(planet.ID())  # If my planet change owner in main PW
 
         for planet in planetsinview.values():
             self._planets[planet.ID()] = planet.Copy()
-            self._planets[planet.ID()].VisionAge(0)
-
-        for id, planet in self._planets.items():
-            if id not in planetsinview:
-                planet.VisionAge(planet.VisionAge() + 1)
+            self._planets[planet.ID()].VisionAge(0)                # Add planets in view
 
         #clear out the fleet list, if they aren't in view they disappear
         self._fleets = {}
         for fleet in fleetsinview.values():
             self._fleets[fleet.ID()] = fleet.Copy()
-            self._fleets[fleet.ID()].VisionAge(0)
-   
+            self._fleets[fleet.ID()].VisionAge(0)               # Add fleets in view 
+        
+        for id, planet in self._planets.items():
+            if id not in planetsinview:
+                planet.VisionAge(planet.VisionAge() + 1)        # Change vision age if no in view
