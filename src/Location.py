@@ -16,6 +16,9 @@ class Location(object):
         
     def __eq__(self, other):
         return self._x == other._x and self._y == other._y
+
+    def __hash__(self):
+        return id(self)
         
     def X(self):
         return self._x
