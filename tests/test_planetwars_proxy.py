@@ -128,3 +128,48 @@ class TestPlanetWarsProxy():
     def test_enemy_fleets(self, base_setup, set_fleets):
         self.test_proxy._playerid = '1'
         assert self.test_proxy.EnemyFleets() == [self.test_proxy._fleets[2]]
+
+    def test_fleet_order(self, base_setup):
+        import uuid
+        destin_test = Planet(2, 2, 1, '1', 50, 4)
+        test_planet = Planet(0, 0, 2, '2', 50, 2)
+        sourse_test = Fleet(1, '1', 50, 5, 5, test_planet)
+        self.test_proxy.FleetOrder(sourse_test, destin_test, 50)
+        (name, source, fleetid, num, dest) = self.test_proxy._orders[0]
+        assert name == 'fleet'
+        assert source == sourse_test.ID()
+        assert type(fleetid) == type(uuid.uuid4())
+        assert num == 50
+        assert dest == destin_test.ID()
+
+    def test_planet_order(self, base_setup):
+        import uuid
+        destin_test = Planet(2, 2, 1, '1', 50, 4)
+        sourse_test = Planet(2, 2, 2, '1', 50, 4)
+        self.test_proxy.PlanetOrder(sourse_test, destin_test, 50)
+        (name, source, fleetid, num, dest) = self.test_proxy._orders[0]
+        assert name == 'planet'
+        assert source == sourse_test.ID()
+        assert type(fleetid) == type(uuid.uuid4())
+        assert num == 50
+        assert dest == destin_test.ID()
+
+    def test_issue_order(self, base_setup):
+        destin_test = Planet(2, 2, 1, '1', 50, 4)
+        test_planet = Planet(0, 0, 2, '2', 50, 2)
+        sourse_fleet = Fleet(1, '1', 50, 5, 5, test_planet)
+        with pytest.raises(ValueError):
+            self.test_proxy.IssueOrder(sourse_fleet, destin_test, 0)
+        with pytest.raises(ValueError):
+            self.test_proxy.IssueOrder(sourse_fleet, '999', 10)
+        with pytest.raises(ValueError):
+            self.test_proxy.IssueOrder(123, destin_test, 10)
+        self.test_proxy.IssueOrder(sourse_fleet, destin_test, 10)
+        (name, source, fleetid, num, dest) = self.test_proxy._orders[0]
+        assert name == 'fleet'
+        assert source == sourse_fleet.ID()
+        assert num == 10
+        assert dest == destin_test.ID()
+
+    def test_update(self, base_setup):
+        pass
