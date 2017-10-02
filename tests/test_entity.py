@@ -16,6 +16,10 @@ class Test_Location():
         assert location1 == location2
         assert location1 != location3
 
+    def test_hash(self):
+        loc = Location(1,1)
+        assert type(hash(loc)) == int
+
     def test_location_distance_to(self):
         location1 = Location(0, 0)
         location2 = Location(3, 4)
@@ -50,6 +54,9 @@ class Test_Entity():
         self.test_entity2 = Entity(1, 2, 2, 50, 1)
         assert self.test_entity == self.test_entity1
         assert self.test_entity != self.test_entity2
+   
+    def test_hash(self, one_entity):
+        assert hash(self.test_entity) == self.test_entity._id 
 
     def test_location_coordinats(self, one_entity):
         assert type(self.test_entity.Location()) == \
