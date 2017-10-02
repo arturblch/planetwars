@@ -22,7 +22,7 @@ class Entity(object):
         return self._id == other._id
 
     def __hash__(self):
-        return id(self)
+        return self._id
 
     def Location(self):
         return self._location
