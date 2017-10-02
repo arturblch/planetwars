@@ -60,8 +60,6 @@ class PlanetWarsProxy(object):
                 self._playerid = int(tokens[2])
                 self._tick = int(tokens[3])
                 self._winner = int(tokens[4])
-            else:
-                continue
         self._FindSize()
 
     def _FindSize(self):
@@ -83,11 +81,12 @@ class PlanetWarsProxy(object):
         if (extent[2] < 0):
             self._offset[1] = abs(extent[2])
 
-
     def SetSize(self, size, offset):
         self._size = size
         self._offset = offset
 
+    def SetPlayerId(self, playerid):
+        self._playerid = playerid
 
     def GetSize(self):
         return self._size
@@ -160,7 +159,7 @@ class PlanetWarsProxy(object):
         r = []
         for p in self._planets:
             planet = self._planets[p]
-            if ((planet.Owner() != self._playerid) and \
+            if ((planet.Owner() != self._playerid) and
                 (planet.Owner() != PlanetWarsProxy.NEUTRAL_PLAYER)):
                 r.append(planet)
         return r
@@ -241,17 +240,10 @@ class PlanetWarsProxy(object):
                              destination_planet.ID()))
         return fleetid
 
-    def SetPlayerId(self, playerid):
-        if not playerid:
-            raise ValueError("No player id!")
-        else:
-            self._playerid = playerid
-
-
     def _Update(self, pw, first_turn=False):
         if (not self._playerid):
             raise ValueError("No player id, can't determine what's in range!")
-        
+
         planetsinview = {}
         fleetsinview = {}
         self._tick = pw.CurrentTick()
@@ -261,12 +253,10 @@ class PlanetWarsProxy(object):
             for planet in planets:
                 planetsinview[planet.ID()] = planet  # View all planets at first step
 
-
-        for my_entity in pw.MyPlanets(self._playerid)+ pw.MyFleets(self._playerid):
+        for my_entity in pw.MyPlanets(self._playerid) + pw.MyFleets(self._playerid):
             planetsinview.update(my_entity.GetInRange(pw.Planets()))
             fleetsinview.update(my_entity.GetInRange(pw.Fleets()))              # View all enttitys if range 
 
-        
         for planet in self.MyPlanets():
             if (pw.GetPlanet(planet.ID()).Owner() != planet.Owner()):
                 planetsinview[planet.ID()] = pw.GetPlanet(planet.ID())  # If my planet change owner in main PW
@@ -275,12 +265,12 @@ class PlanetWarsProxy(object):
             self._planets[planet.ID()] = planet.Copy()
             self._planets[planet.ID()].VisionAge(0)                # Add planets in view
 
-        #clear out the fleet list, if they aren't in view they disappear
+        # clear out the fleet list, if they aren't in view they disappear
         self._fleets = {}
         for fleet in fleetsinview.values():
             self._fleets[fleet.ID()] = fleet.Copy()
             self._fleets[fleet.ID()].VisionAge(0)               # Add fleets in view 
-        
+
         for id, planet in self._planets.items():
             if id not in planetsinview:
-                planet.VisionAge(planet.VisionAge() + 1)        # Change vision age if no in view
+                planet.VisionAge(planet.VisionAge() + 1)        # Change vision age if not in view
