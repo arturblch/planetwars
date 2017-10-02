@@ -1,5 +1,6 @@
 import pytest
 from src.PlanetWarsProxy import PlanetWarsProxy
+from src.PlanetWars import PlanetWars
 from src.Planet import Planet
 from src.Fleet import Fleet
 import sys
@@ -22,6 +23,22 @@ class TestPlanetWarsProxy():
         self.test_proxy._fleets[1] = Fleet(1, '1', 50, 5, 5, test_planet)
         self.test_proxy._fleets[2] = Fleet(2, '2', 50, 5, 5, test_planet)
 
+    @pytest.fixture
+    def main_proxy(self):
+        self.main_pw = PlanetWars()
+        self.main_pw._planets[1] = Planet(2, 2, 1, '1', 50, 4)
+        self.main_pw._planets[1].VisionRange = lambda : 4  # mock range func
+        self.main_pw._planets[2] = Planet(15, 15, 2, '2', 50, 4)
+        self.main_pw._planets[3] = Planet(2, 5, 3, '0', 50, 4)
+
+        test_planet = Planet(0, 0, 2, '2', 50, 2)
+        self.main_pw._fleets[1] = Fleet(1, '1', 50, 2, 3, test_planet)
+        self.main_pw._fleets[1].VisionRange = lambda : 2  # mock range func
+        self.main_pw._fleets[2] = Fleet(2, '2', 50, 14, 15, test_planet)
+        self.main_pw._fleets[3] = Fleet(3, '0', 50, 2, 4, test_planet)
+        
+        self.proxy = self.main_pw.MakeProxy('1') # has _update func
+
     def test_parse_planet(self, base_setup):
         test_planet = 'P 2 2 1 1 50 4'.split()
         result = self.test_proxy._ParsePlanet(test_planet)
@@ -33,6 +50,7 @@ class TestPlanetWarsProxy():
                      + 'P 15 15 2 2 50 4\n'\
                      + 'P 4 14 3 0 50 4\n'\
                      + 'G 123 asd\n'
+        print(test_map.split('\n'))
         self.test_proxy._ParseGameState(test_map)
         assert self.test_proxy._planets[1] == Planet(2, 2, 1, '1', 50, 4)
         assert self.test_proxy._planets[2] == Planet(15, 15, 2, '2', 50, 4)
@@ -48,6 +66,10 @@ class TestPlanetWarsProxy():
         self.test_proxy.SetSize([5, 5], [6, 6])
         assert self.test_proxy._size == [5, 5]
         assert self.test_proxy._offset == [6, 6]
+
+    def test_set_player_id(self, base_setup):
+        self.test_proxy.SetPlayerId('2')
+        assert self.test_proxy._playerid == '2'
 
     def test_get_size(self, base_setup):
         self.test_proxy._size = [5, 5]
@@ -171,5 +193,46 @@ class TestPlanetWarsProxy():
         assert num == 10
         assert dest == destin_test.ID()
 
-    def test_update(self, base_setup):
-        pass
+    def test_update_error(self, base_setup):
+        pw = PlanetWarsProxy()
+        with pytest.raises(ValueError):
+            self.test_proxy._Update(pw)
+
+    def test_update(self, main_proxy):
+        # check updating my planet
+        self.main_pw._planets[1].RemoveShips(15)
+        self.proxy._Update(self.main_pw)
+        assert self.proxy._planets[1] is not self.main_pw._planets[1]  # Security
+        assert self.proxy._planets[1].NumShips() == 35
+
+        # check planets in vision
+        self.main_pw._planets[3].RemoveShips(15)
+        self.proxy._Update(self.main_pw)
+        assert self.proxy._planets[3] is not self.main_pw._planets[3]  # Security
+        assert self.proxy._planets[3].NumShips() == 35
+
+        # check not updating not in vision planets
+        self.main_pw._planets[2].RemoveShips(15)
+        self.proxy._Update(self.main_pw)
+        assert self.proxy._planets[2].NumShips() == 50
+
+        # check fleet in vision
+        self.main_pw._fleets[3].RemoveShips(15)
+        self.proxy._Update(self.main_pw)
+        assert self.proxy._fleets[3] is not self.main_pw._fleets[3]  # Security
+        assert self.proxy._fleets[3].NumShips() == 35
+
+        # chek fleet not in vision
+        self.main_pw._fleets[2].RemoveShips(15)
+        self.proxy._Update(self.main_pw)
+        assert self.proxy._fleets.get(2) == None
+
+        # check change defit planet
+        self.main_pw._planets[1].Owner('2')
+        self.proxy._Update(self.main_pw)
+        assert self.proxy._planets[1].Owner() == '2'
+
+    def test_change_vision_age(self, main_proxy):
+        assert self.proxy._planets[2].VisionAge() == 0 
+        self.proxy._Update(self.main_pw)
+        assert self.proxy._planets[2].VisionAge() == 1
