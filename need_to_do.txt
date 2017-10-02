@@ -6,8 +6,12 @@ remove it from Owner()
 
 change parameters order in __init__ planet
 
-
-
 fix coordinates dublicates() x() y() and location in one class
 
-pw.tick() error:  unhashable type:'Planet'
+pw.tick() error:  unhashable type:'Planet' (fix: add __hash__ to class Planet)
+
+move vision age changing from _Update to Tick
+
+add reference of child proxy to pw
+
+remove dublicates from PlanetWars class
